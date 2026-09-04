@@ -1625,10 +1625,30 @@ function renderMySchedule(){
 }
 
 /* ============================================================
-   FORM SUBMISSION (front-end only — wire to backend as needed)
+   FORM SUBMISSION — sends the response to Amal's Google Sheet
+   via the Apps Script web app URL below
    ============================================================ */
+const GOOGLE_SHEET_ENDPOINT = 'https://script.google.com/a/macros/salla.sa/s/AKfycbxnIK0CPTAHPPup8_KGBQLLKZtWxNP3LmOpaMtuCjNqWIy0O6CpWmRoPLsr5O01XPFb/exec';
+
 document.getElementById('scheduleForm').addEventListener('submit', function(e){
   e.preventDefault();
+  const formData = new FormData(this);
+  const payload = {
+    employee_name: formData.get('employee_name') || '',
+    preferred_days_off: formData.get('preferred_days_off') || '',
+    notes: formData.get('notes') || ''
+  };
+
+  // "no-cors" is required for Apps Script web apps from a plain HTML page —
+  // it means we can't read back a real success/failure response, so the
+  // confirmation message below shows regardless of the actual result.
+  fetch(GOOGLE_SHEET_ENDPOINT, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  }).catch(err => console.error('Schedule request submit error:', err));
+
   const success = document.getElementById('formSuccess');
   success.classList.add('show');
   this.reset();
