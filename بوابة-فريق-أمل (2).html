@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>بوابة فريق أمل | سبتمبر 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Aref+Ruqaa:wght@700&display=swap" rel="stylesheet">
+<style>
+
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root{
+  /* --- brand colors (grounded in the original Canva identity) --- */
+  --primary:        #1E4A47;   /* deep teal — headings, filled states */
+  --primary-dark:   #12312F;   /* darkest teal — text on light, header */
+  --primary-light:  #4F8481;   /* lighter teal — secondary accents */
+  --primary-tint:   #DCEAE8;   /* pale teal wash for chips/hovers */
+
+  --sand:           #C9A876;   /* warm sand/gold — “off” + secondary accent, taken from the original schedule’s amber cells */
+  --sand-tint:      #F3E9D6;
+
+  --pink:           #D9698B;   /* girls-mode accent — swapped into --sand slots below */
+  --pink-tint:      #FBE8EE;
+  --pink-dark:      #A94A6C;
+
+  --rose:           #B5504A;   /* muted brick red — special leave, taken from original “UAE” red cells but desaturated for elegance */
+  --rose-tint:      #F3DEDC;
+
+  --background:     #EEF4F3;   /* light sky/mint page background */
+  --surface:        #FFFFFF;   /* card surfaces */
+  --surface-2:      #F7FAF9;   /* subtle alternate surface (table stripes) */
+
+  --text-primary:   #16302E;
+  --text-secondary: #5C7370;
+  --text-muted:     #8AA09D;
+
+  --border:         rgba(30,74,71,0.12);
+  --border-strong:  rgba(30,74,71,0.22);
+
+  /* --- type --- */
+  --font-body: 'Tajawal', system-ui, sans-serif;
+  --font-display: 'Aref Ruqaa', 'Tajawal', serif;
+
+  /* --- spacing scale (4px base) --- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 64px;
+  --sp-9: 96px;
+
+  /* --- radius --- */
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-pill: 999px;
+
+  /* --- shadow (kept very quiet) --- */
+  --shadow-1: 0 1px 2px rgba(18,49,47,0.06);
+  --shadow-2: 0 8px 24px -12px rgba(18,49,47,0.18);
+  --shadow-3: 0 16px 40px -16px rgba(18,49,47,0.22);
+
+  --container: 1180px;
+}
+
+/* girls theme: reuses the --sand accent slot (already wired into badges,
+   the calendar, form notes and star rating) so pink shows up consistently
+   without duplicating rules, while the teal identity stays untouched */
+/* girls / amal themes shift the primary palette itself (not just the
+   accent slot) so the change is clearly visible, while keeping the same
+   token names everywhere else in the file untouched */
+body.theme-girls{
+  --primary:        #B23A63;
+  --primary-dark:   #7A2445;
+  --primary-light:  #D9698B;
+  --primary-tint:   #F7E3EA;
+  --sand:           #E7A6B7;
+  --sand-tint:      #FBE8EE;
+}
+body.theme-girls .hero-visual{
+  background:
+    radial-gradient(120% 140% at 15% 10%, rgba(255,255,255,0.16), transparent 45%),
+    linear-gradient(160deg, var(--primary) 0%, var(--primary-dark) 78%);
+}
+
+/* Amal Mode is now a password-gated personal dashboard (see .amal-dashboard
+   below) rather than a site-wide color theme, so the old theme-amal
+   overrides are gone — the toggle button just opens that dashboard. */
+
+*{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{
+  margin:0;
+  font-family:var(--font-body);
+  background:var(--background);
+  color:var(--text-primary);
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+img{ max-width:100%; display:block; }
+button, input, textarea, select{ font-family:inherit; }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+}
+
+/* focus visibility (accessibility floor) */
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible{
+  outline: 2px solid var(--primary-light);
+  outline-offset: 2px;
+}
+
+.container{ max-width:var(--container); margin:0 auto; padding:0 var(--sp-5); }
+@media (max-width: 640px){ .container{ padding:0 var(--sp-4); } }
+
+.section{ padding: var(--sp-8) 0; }
+@media (max-width: 780px){ .section{ padding: var(--sp-6) 0; } }
+
+.section-head{ margin-bottom: var(--sp-6); display:flex; align-items:flex-end; justify-content:space-between; gap:var(--sp-4); flex-wrap:wrap; }
+.section-title{ font-size: clamp(22px, 3vw, 30px); font-weight:800; color:var(--primary-dark); margin:0; }
+.section-sub{ color:var(--text-secondary); font-size:15px; margin-top:var(--sp-1); }
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-lg);
+  box-shadow:var(--shadow-1);
+}
+
+.reveal{ opacity:0; transform:translateY(14px); transition:opacity .6s ease, transform .6s ease; }
+.reveal.is-visible{ opacity:1; transform:translateY(0); }
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.site-header{
+  position:sticky; top:0; z-index:50;
+  background:rgba(238,244,243,0.86);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+}
+.site-header .container{
+  height:72px; display:flex; align-items:center; justify-content:space-between;
+}
+.brand{ display:flex; align-items:center; gap:var(--sp-3); }
+.brand-mark{
+  width:40px; height:40px; border-radius:12px;
+  background:linear-gradient(155deg, var(--primary) 0%, var(--primary-dark) 100%);
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-weight:800; font-size:17px; flex:none;
+}
+.brand-name{ font-weight:800; color:var(--primary-dark); font-size:17px; }
+.brand-sub{ color:var(--text-muted); font-size:12px; }
+.header-date{
+  font-size:14px; color:var(--primary-dark); font-weight:700;
+  background:var(--primary-tint); padding:8px 16px; border-radius:var(--r-pill);
+}
+@media (max-width:560px){ .header-date{ display:none; } }
+
+/* ============================================================
+   GENDER SWITCH
+   ============================================================ */
+.gender-switch{ display:flex; justify-content:center; padding-top: var(--sp-6); }
+.gender-toggle{
+  display:inline-flex; gap:4px; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-pill); padding:5px; box-shadow:var(--shadow-1);
+}
+.gender-btn{
+  border:none; background:transparent; cursor:pointer; font-family:inherit;
+  padding:10px 24px; border-radius:var(--r-pill); font-weight:700; font-size:14px;
+  color:var(--text-secondary); transition:background .25s ease, color .25s ease, transform .15s ease;
+  direction:ltr; /* keep "Boys"/"Girls" latin text left-to-right even on an rtl page */
+}
+.gender-btn:hover{ color:var(--text-primary); }
+.gender-btn.active{ color:#fff; animation:genderPop .25s ease; }
+.gender-btn.active[data-gender="m"]{ background:var(--primary); }
+.gender-btn.active[data-gender="f"]{ background:#B23A63; }
+@keyframes genderPop{ 0%{ transform:scale(1); } 45%{ transform:scale(1.07); } 100%{ transform:scale(1); } }
+
+.settings-gear{
+  width:44px; height:44px; border-radius:50%; border:1px solid var(--border);
+  background:var(--surface); color:var(--text-secondary); cursor:pointer;
+  display:flex; align-items:center; justify-content:center; font-size:18px;
+  box-shadow:var(--shadow-1); transition:transform .3s ease, color .2s ease;
+  flex:none;
+}
+.settings-gear:hover{ color:var(--primary-dark); transform:rotate(35deg); }
+
+/* ============================================================
+   SETTINGS MODAL / CONTROL PANEL
+   ============================================================ */
+.modal-backdrop{
+  position:fixed; inset:0; background:rgba(18,49,47,0.45); backdrop-filter:blur(2px);
+  display:none; align-items:center; justify-content:center; z-index:400; padding:var(--sp-5);
+}
+.modal-backdrop.show{ display:flex; }
+.modal-card{
+  background:var(--surface); border-radius:var(--r-lg); padding:var(--sp-6);
+  width:100%; max-width:400px; max-height:85vh; overflow-y:auto; box-shadow:var(--shadow-3); position:relative;
+}
+.modal-close{
+  position:absolute; top:14px; inset-inline-end:14px; background:none; border:none;
+  cursor:pointer; font-size:18px; color:var(--text-muted);
+}
+.modal-title{ font-size:18px; font-weight:800; color:var(--primary-dark); margin:0 0 var(--sp-4); }
+.modal-card .field{ margin-bottom:var(--sp-3); }
+.modal-error{ color:var(--rose); font-size:13px; margin-top:6px; display:none; }
+.modal-error.show{ display:block; }
+
+.panel-row{
+  display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3);
+  padding:var(--sp-3) 0; border-bottom:1px solid var(--border);
+}
+.panel-row:last-of-type{ border-bottom:none; }
+.panel-row b{ font-size:14px; color:var(--text-primary); display:block; }
+.panel-row small{ color:var(--text-muted); font-size:12px; }
+.switch{ position:relative; width:46px; height:26px; flex:none; }
+.switch input{ opacity:0; width:0; height:0; }
+.switch span{
+  position:absolute; inset:0; background:var(--border-strong); border-radius:var(--r-pill);
+  cursor:pointer; transition:background .2s ease;
+}
+.switch span::before{
+  content:""; position:absolute; width:20px; height:20px; border-radius:50%; background:#fff;
+  top:3px; inset-inline-start:3px; transition:transform .2s ease; box-shadow:var(--shadow-1);
+}
+.switch input:checked + span{ background:var(--primary); }
+.switch input:checked + span::before{ transform:translateX(-20px); }
+[dir="rtl"] .switch input:checked + span::before{ transform:translateX(20px); }
+
+.panel-btn{
+  width:100%; margin-top:var(--sp-4); padding:11px; border-radius:var(--r-sm);
+  border:1.5px solid var(--border-strong); background:var(--surface-2); color:var(--text-primary);
+  font-weight:700; font-size:13.5px; cursor:pointer;
+}
+.panel-btn.danger{ color:var(--rose); border-color:var(--rose-tint); }
+.panel-btn:hover{ background:var(--primary-tint); }
+.panel-note{ font-size:12px; color:var(--text-muted); margin-top:var(--sp-4); line-height:1.6; }
+
+.panel-section{ margin-top:var(--sp-5); padding-top:var(--sp-5); border-top:1px solid var(--border); }
+.panel-section-title{ font-size:14px; font-weight:800; color:var(--primary-dark); margin:0 0 var(--sp-3); }
+.panel-mini-form{ display:flex; gap:8px; flex-wrap:wrap; }
+.panel-mini-form input, .panel-mini-form select{
+  flex:1; min-width:100px; border:1.5px solid var(--border-strong); border-radius:var(--r-sm);
+  padding:9px 10px; font-size:13.5px; background:var(--surface-2); color:var(--text-primary); font-family:inherit;
+}
+.panel-mini-form button{
+  border:none; background:var(--primary); color:#fff; font-weight:700; font-size:13px;
+  padding:9px 16px; border-radius:var(--r-sm); cursor:pointer; white-space:nowrap;
+}
+.log-list{ list-style:none; margin:0; padding:0; max-height:160px; overflow-y:auto; }
+.log-list li{ font-size:12.5px; color:var(--text-secondary); padding:7px 0; border-bottom:1px dashed var(--border); }
+.log-list li:last-child{ border-bottom:none; }
+.log-list time{ display:block; color:var(--text-muted); font-size:11px; }
+.log-empty{ font-size:12.5px; color:var(--text-muted); }
+
+/* delete-employee affordance, visible only in edit mode */
+.emp-delete-btn{
+  display:none; border:none; background:var(--rose-tint); color:var(--rose); width:20px; height:20px;
+  border-radius:50%; font-size:12px; line-height:1; cursor:pointer; margin-inline-start:8px; vertical-align:middle;
+}
+body.edit-mode .emp-delete-btn{ display:inline-flex; align-items:center; justify-content:center; }
+
+/* ============================================================
+   MY SCHEDULE (personal identification widget)
+   ============================================================ */
+.myschedule{
+  display:flex; align-items:center; gap:var(--sp-3); flex-wrap:wrap; margin-bottom:var(--sp-4);
+  background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-md); padding:var(--sp-3) var(--sp-4);
+}
+.myschedule input{
+  border:1.5px solid var(--border-strong); border-radius:var(--r-sm); padding:9px 12px;
+  font-size:13.5px; font-family:inherit; background:var(--surface); color:var(--text-primary); min-width:160px;
+}
+.myschedule button{
+  border:none; background:var(--primary); color:#fff; font-weight:700; font-size:13px;
+  padding:9px 18px; border-radius:var(--r-pill); cursor:pointer;
+}
+.myschedule .pill{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+}
+.myschedule .pill b{ color:var(--primary-dark); }
+.myschedule .reminder{
+  font-size:13px; font-weight:700; color:var(--primary-dark);
+  background:var(--primary-tint); padding:6px 14px; border-radius:var(--r-pill);
+}
+.myschedule .change-link{
+  background:none; border:none; color:var(--text-muted); font-size:12.5px; text-decoration:underline;
+  cursor:pointer; padding:0;
+}
+table.schedule tr.is-me{ outline:2px solid var(--primary); outline-offset:-2px; }
+table.schedule tr.is-me td.emp-name{ font-weight:800; }
+table.schedule tr.is-me td{ background:var(--primary-tint) !important; }
+
+/* ============================================================
+   DAILY QUOTE BANNER
+   ============================================================ */
+.quote-banner{
+  display:flex; align-items:center; gap:var(--sp-3); margin-top:var(--sp-5);
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-pill);
+  padding:12px 20px; box-shadow:var(--shadow-1);
+}
+.quote-banner .q-ico{ font-size:18px; flex:none; }
+.quote-banner p{ margin:0; font-size:13.5px; color:var(--text-secondary); font-style:normal; }
+
+/* edit-mode affordances */
+body.edit-mode [data-edit-key], body.edit-mode .emp-name-text{
+  outline:1.5px dashed var(--primary-light); outline-offset:3px; border-radius:4px; cursor:text;
+}
+body.edit-mode [data-edit-key]:focus, body.edit-mode .emp-name-text:focus{
+  outline:1.5px solid var(--primary); background:var(--primary-tint);
+}
+body.edit-mode .status-cell{ cursor:pointer; }
+body.edit-mode .status-cell:hover .dot{ transform:scale(1.2); }
+.edit-mode-banner{
+  display:none; position:sticky; top:72px; z-index:40; background:var(--primary-dark); color:#fff;
+  text-align:center; font-size:13px; font-weight:700; padding:8px;
+}
+body.edit-mode .edit-mode-banner{ display:block; }
+
+/* ============================================================
+   AMAL DASHBOARD — password-gated personal page for the manager.
+   Deliberately light throughout (pastel teal↔pink blend, no dark
+   panels) per her request.
+   ============================================================ */
+.amal-dashboard{
+  display:none; position:fixed; inset:0; z-index:300; overflow-y:auto;
+  background:
+    radial-gradient(90% 60% at 10% 0%, rgba(30,74,71,0.10), transparent 60%),
+    radial-gradient(90% 60% at 100% 10%, rgba(217,105,139,0.14), transparent 60%),
+    linear-gradient(180deg, #F3FAF9 0%, #FDF3F6 100%);
+}
+.amal-dashboard.show{ display:block; }
+.amal-dash-inner{ padding: var(--sp-7) var(--sp-5) var(--sp-8); max-width:1080px; }
+.amal-dash-close{
+  display:flex; align-items:center; gap:6px; margin-inline-start:auto; margin-bottom:var(--sp-5);
+  border:1px solid var(--border-strong); background:var(--surface); color:var(--text-primary);
+  font-weight:700; font-size:13.5px; padding:9px 18px; border-radius:var(--r-pill); cursor:pointer;
+}
+.amal-dash-close:hover{ background:var(--surface-2); }
+
+.amal-hero{ text-align:center; padding: var(--sp-6) var(--sp-4) var(--sp-7); }
+.amal-hero-emoji{ font-size:44px; margin-bottom:var(--sp-3); }
+.amal-hero h1{
+  font-size:clamp(22px, 4vw, 32px); font-weight:800; margin:0 0 var(--sp-3); line-height:1.4;
+  background:linear-gradient(90deg, #1E4A47, #B23A63);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.amal-hero p{ color:var(--text-secondary); font-size:15px; margin:0; }
+
+.amal-stats-grid{
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:var(--sp-4);
+  margin-bottom:var(--sp-6);
+}
+.amal-stat-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md);
+  padding:var(--sp-4); text-align:center; box-shadow:var(--shadow-1);
+}
+.amal-stat-card:nth-child(odd){ border-top:3px solid #4F8481; }
+.amal-stat-card:nth-child(even){ border-top:3px solid #D9698B; }
+.amal-stat-card span{ display:block; font-size:12.5px; color:var(--text-muted); margin-bottom:6px; }
+.amal-stat-card b{ font-size:22px; color:var(--primary-dark); font-weight:800; }
+
+.amal-highlight-row{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-4); margin-bottom:var(--sp-6); }
+@media (max-width:640px){ .amal-highlight-row{ grid-template-columns:1fr; } }
+.amal-highlight{
+  border-radius:var(--r-md); padding:var(--sp-4); font-size:13.5px; font-weight:600;
+  border:1px solid var(--border);
+}
+.amal-highlight.top{ background:#EAF6F0; color:#1E5E45; }
+.amal-highlight.watch{ background:#FBEEEF; color:#8A3A45; }
+.amal-highlight b{ display:block; font-size:15px; margin-top:4px; }
+
+.amal-report-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg);
+  padding:var(--sp-5); box-shadow:var(--shadow-1); overflow-x:auto;
+}
+.amal-report-card h3{ margin:0 0 var(--sp-4); font-size:16px; color:var(--primary-dark); }
+table.amal-report{ border-collapse:separate; border-spacing:0; width:100%; min-width:760px; font-size:13px; }
+table.amal-report th, table.amal-report td{ padding:11px 12px; text-align:center; white-space:nowrap; }
+table.amal-report thead th{
+  background:linear-gradient(90deg, #E4F1EF, #FBE7EE); color:var(--primary-dark);
+  font-weight:700; font-size:12.5px; position:sticky; top:0;
+}
+table.amal-report tbody tr:nth-child(even){ background:#FAFCFC; }
+table.amal-report td.name-cell{ text-align:start; font-weight:600; color:var(--text-primary); }
+table.amal-report tfoot td{ background:var(--primary-tint); font-weight:800; color:var(--primary-dark); }
+.csat-pill{
+  display:inline-block; padding:3px 10px; border-radius:var(--r-pill); font-weight:700; font-size:12px;
+}
+.csat-high{ background:#E1F3E7; color:#1E6B3E; }
+.csat-mid{ background:#FDF1DC; color:#8A6A1F; }
+.csat-low{ background:#FBE6E6; color:#A33; }
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero{ padding-top: var(--sp-6); }
+.hero-grid{
+  display:grid; grid-template-columns: 1.15fr 0.85fr; gap:var(--sp-7);
+  align-items:center;
+}
+@media (max-width:900px){ .hero-grid{ grid-template-columns:1fr; gap:var(--sp-6); } }
+
+.hero-eyebrow{
+  color:var(--primary-light); font-weight:700; font-size:15px; margin-bottom:var(--sp-2);
+}
+.hero-title{
+  font-size:clamp(26px, 4vw, 40px); font-weight:800; color:var(--primary-dark);
+  margin:0 0 var(--sp-4); line-height:1.3;
+}
+.hero-title span{ color:var(--primary-light); }
+.hero-desc{ color:var(--text-secondary); font-size:16px; max-width:46ch; margin-bottom:var(--sp-6); }
+
+.hero-stats{ display:flex; gap:var(--sp-5); flex-wrap:wrap; }
+.hero-stat{ display:flex; align-items:center; gap:var(--sp-3); }
+.hero-stat .ico{
+  width:44px; height:44px; border-radius:12px; background:var(--primary-tint);
+  display:flex; align-items:center; justify-content:center; color:var(--primary); flex:none;
+}
+.hero-stat b{ display:block; color:var(--primary-dark); font-size:15px; }
+.hero-stat small{ color:var(--text-muted); font-size:13px; }
+
+.hero-visual{
+  position:relative; border-radius:var(--r-lg); overflow:hidden;
+  background:
+    radial-gradient(120% 140% at 15% 10%, rgba(255,255,255,0.14), transparent 45%),
+    linear-gradient(160deg, var(--primary) 0%, var(--primary-dark) 78%);
+  min-height:280px; box-shadow:var(--shadow-3);
+  display:flex; flex-direction:column; justify-content:space-between;
+  padding:var(--sp-6);
+}
+.hero-visual::before{
+  content:""; position:absolute; inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size:28px 28px;
+  mask-image: radial-gradient(120% 100% at 100% 0%, #000 40%, transparent 85%);
+  pointer-events:none;
+}
+.hero-month-label{ color:rgba(255,255,255,0.72); font-size:14px; font-weight:500; position:relative; }
+.hero-month{
+  font-family:var(--font-display); color:#fff; font-size:clamp(42px,7vw,64px);
+  line-height:1; margin:var(--sp-2) 0; position:relative;
+}
+.hero-year{ color:var(--sand); font-weight:800; font-size:22px; letter-spacing:1px; position:relative; }
+.hero-ayah{
+  position:relative; color:rgba(255,255,255,0.82); font-size:14px; margin-top:var(--sp-5);
+  padding-top:var(--sp-4); border-top:1px solid rgba(255,255,255,0.16);
+}
+
+/* ============================================================
+   HIGHLIGHTS
+   ============================================================ */
+.highlight-grid{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-5); }
+@media (max-width:780px){ .highlight-grid{ grid-template-columns:1fr; } }
+.highlight-card{ padding:var(--sp-5); display:flex; gap:var(--sp-4); transition:transform .35s ease, box-shadow .35s ease; }
+.highlight-card:hover{ transform:translateY(-3px); box-shadow:var(--shadow-2); }
+.highlight-ico{
+  width:48px; height:48px; border-radius:var(--r-md); flex:none;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--primary-tint); color:var(--primary);
+}
+.highlight-card.gold .highlight-ico{ background:var(--sand-tint); color:#8a6a2f; }
+.highlight-card h3{ margin:0 0 6px; font-size:17px; color:var(--primary-dark); font-weight:700; }
+.highlight-card p{ margin:0; color:var(--text-secondary); font-size:14.5px; }
+
+/* ============================================================
+   SPOTLIGHT + WISHES
+   ============================================================ */
+.editorial-grid{ display:grid; grid-template-columns:1.3fr 1fr; gap:var(--sp-5); align-items:stretch; }
+@media (max-width:900px){ .editorial-grid{ grid-template-columns:1fr; } }
+
+.spotlight{
+  padding:var(--sp-6); display:grid; grid-template-columns:auto 1fr; gap:var(--sp-6); align-items:center;
+  position:relative; overflow:hidden;
+}
+.spotlight::after{
+  content:""; position:absolute; inset-inline-end:-40px; inset-block-start:-40px;
+  width:160px; height:160px; border-radius:50%; background:var(--primary-tint); opacity:.6; z-index:0;
+}
+@media (max-width:560px){ .spotlight{ grid-template-columns:1fr; text-align:center; } }
+.spotlight-avatar{
+  width:112px; height:112px; border-radius:28px; flex:none; position:relative; z-index:1;
+  background:linear-gradient(150deg, var(--primary-light), var(--primary-dark));
+  color:#fff; display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-size:46px; box-shadow:var(--shadow-2);
+  margin:0 auto;
+}
+@media (min-width:561px){ .spotlight-avatar{ margin:0; } }
+.spotlight-body{ position:relative; z-index:1; }
+.spotlight-kicker{ color:var(--primary-light); font-weight:700; font-size:13.5px; margin-bottom:var(--sp-1); }
+.spotlight-name{ font-size:22px; font-weight:800; color:var(--primary-dark); margin:0 0 var(--sp-2); }
+.spotlight-quote{ color:var(--text-secondary); font-size:15px; margin:0; }
+.spotlight-badge{
+  display:inline-flex; align-items:center; gap:6px; margin-top:var(--sp-3);
+  background:var(--sand-tint); color:#8a6a2f; font-size:12.5px; font-weight:700;
+  padding:6px 12px; border-radius:var(--r-pill);
+}
+
+.wishes{ padding:var(--sp-6); display:flex; flex-direction:column; gap:var(--sp-3); }
+.wishes h3{ margin:0 0 var(--sp-1); font-size:17px; color:var(--primary-dark); }
+.wish-item{
+  display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3);
+  padding:var(--sp-3) var(--sp-4); border-radius:var(--r-md); background:var(--surface-2);
+  border:1px solid var(--border);
+}
+.wish-item b{ font-size:14.5px; color:var(--text-primary); font-weight:600; }
+.wish-item span{ font-size:13px; color:var(--text-muted); }
+
+/* ============================================================
+   FRIDAY PRAYER NOTICE
+   ============================================================ */
+.notice{
+  display:flex; align-items:center; gap:var(--sp-5); padding:var(--sp-5) var(--sp-6);
+  background:linear-gradient(90deg, var(--primary-tint), var(--surface));
+  border-radius:var(--r-lg); border:1px solid var(--border);
+}
+.notice-ico{
+  width:56px; height:56px; border-radius:16px; flex:none;
+  background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center;
+}
+.notice-text b{ display:block; color:var(--primary-dark); font-size:16px; margin-bottom:2px; }
+.notice-text span{ color:var(--text-secondary); font-size:14px; }
+@media (max-width:560px){ .notice{ flex-direction:column; text-align:center; } }
+
+/* ============================================================
+   CALENDAR
+   ============================================================ */
+.cal-card{ padding:var(--sp-6); }
+.cal-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp-5); flex-wrap:wrap; gap:var(--sp-3); }
+.cal-title{ font-size:18px; font-weight:800; color:var(--primary-dark); margin:0; }
+.cal-legend{ display:flex; gap:var(--sp-4); font-size:13px; color:var(--text-secondary); }
+.cal-legend i{ display:inline-block; width:10px; height:10px; border-radius:3px; margin-inline-end:6px; }
+.cal-grid{ display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; }
+.cal-dow{ text-align:center; font-size:12.5px; font-weight:700; color:var(--text-muted); padding-bottom:6px; }
+.cal-cell{
+  aspect-ratio:1/0.85; border-radius:12px; background:var(--surface-2); border:1px solid var(--border);
+  display:flex; align-items:flex-start; justify-content:flex-end; padding:8px 10px;
+  font-size:13.5px; color:var(--text-secondary); font-weight:600;
+}
+.cal-cell.empty{ background:transparent; border-color:transparent; }
+.cal-cell.weekend{ background:var(--sand-tint); color:#8a6a2f; border-color:transparent; }
+.cal-cell.today{ background:var(--primary); color:#fff; box-shadow:var(--shadow-2); }
+@media (max-width:640px){ .cal-cell{ font-size:11.5px; padding:6px; border-radius:8px; } .cal-dow{ font-size:10.5px; } }
+
+/* ============================================================
+   FORM
+   ============================================================ */
+.form-card{ padding:var(--sp-6); }
+.form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-4); margin-top:var(--sp-5); }
+.form-grid .full{ grid-column:1/-1; }
+@media (max-width:680px){ .form-grid{ grid-template-columns:1fr; } }
+.field label{ display:block; font-size:13.5px; font-weight:700; color:var(--primary-dark); margin-bottom:8px; }
+.field input, .field textarea{
+  width:100%; border:1.5px solid var(--border-strong); border-radius:var(--r-sm);
+  padding:12px 14px; font-size:14.5px; background:var(--surface-2); color:var(--text-primary);
+  transition:border-color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+.field textarea{ resize:vertical; min-height:96px; }
+.field input:hover, .field textarea:hover{ border-color:var(--primary-light); }
+.field input:focus, .field textarea:focus{
+  outline:none; border-color:var(--primary); background:var(--surface);
+  box-shadow:0 0 0 4px var(--primary-tint);
+}
+.form-note{
+  display:flex; gap:10px; align-items:flex-start; background:var(--sand-tint); color:#7a5d29;
+  padding:12px 14px; border-radius:var(--r-sm); font-size:13.5px; margin-top:var(--sp-4);
+}
+.btn-submit{
+  margin-top:var(--sp-5); border:none; cursor:pointer; background:var(--primary); color:#fff;
+  font-weight:700; font-size:15px; padding:13px 32px; border-radius:var(--r-pill);
+  transition:background .2s ease, transform .15s ease;
+}
+.btn-submit:hover{ background:var(--primary-dark); }
+.btn-submit:active{ transform:scale(0.98); }
+.form-success{
+  display:none; margin-top:var(--sp-4); background:var(--primary-tint); color:var(--primary-dark);
+  padding:12px 14px; border-radius:var(--r-sm); font-size:14px; font-weight:600;
+}
+.form-success.show{ display:block; }
+
+/* ============================================================
+   EMPLOYEE SCHEDULE (most important section)
+   ============================================================ */
+.schedule-head{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:var(--sp-4); margin-bottom:var(--sp-5); }
+.legend-row{ display:flex; gap:var(--sp-4); flex-wrap:wrap; }
+.legend-chip{ display:flex; align-items:center; gap:8px; font-size:13.5px; color:var(--text-secondary); font-weight:600; }
+.dot{ width:16px; height:16px; border-radius:50%; flex:none; display:inline-block; box-sizing:border-box; }
+.dot.work{ background:var(--primary); }
+.dot.off{ background:var(--surface); border:2px solid var(--primary-light); }
+.dot.special{ background:var(--rose); }
+
+/* small always-on indicator next to each name — a quick visual read of
+   the team mix, independent of the Boys/Girls view toggle above */
+.emp-gender-dot{
+  display:inline-block; width:7px; height:7px; border-radius:50%;
+  margin-inline-start:8px; vertical-align:middle;
+}
+.emp-gender-dot.g-m{ background:var(--primary-light); }
+.emp-gender-dot.g-f{ background:var(--pink); }
+
+.schedule-card{ padding:0; overflow:hidden; }
+.schedule-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+table.schedule{ border-collapse:separate; border-spacing:0; width:100%; min-width:900px; }
+table.schedule th, table.schedule td{ padding:14px 16px; text-align:center; font-size:14px; white-space:nowrap; }
+table.schedule thead th{
+  background:var(--primary-dark); color:#fff; font-weight:700; font-size:13.5px; position:sticky; top:0; z-index:2;
+}
+table.schedule tbody tr:nth-child(even){ background:var(--surface-2); }
+table.schedule tbody tr:hover{ background:var(--primary-tint); }
+table.schedule td.emp-name, table.schedule th.emp-name{
+  text-align:start; font-weight:700; color:var(--primary-dark);
+  position:sticky; inset-inline-start:0; background:var(--surface); z-index:1;
+  box-shadow: -2px 0 0 var(--border);
+}
+table.schedule thead th.emp-name{ background:var(--primary-dark); color:#fff; box-shadow:none; }
+table.schedule tbody tr:nth-child(even) td.emp-name{ background:var(--surface-2); }
+table.schedule td.emp-id{ color:var(--text-muted); font-size:12.5px; }
+.status-cell{ display:flex; align-items:center; justify-content:center; }
+.status-cell .dot{ margin:auto; }
+tfoot.schedule-foot td{
+  background:var(--primary-tint); font-weight:700; color:var(--primary-dark); font-size:13px;
+  border-top:2px solid var(--border-strong);
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.site-footer{ padding:var(--sp-7) 0 var(--sp-6); text-align:center; }
+.rating{ display:flex; gap:6px; justify-content:center; margin-bottom:var(--sp-3); }
+.rating button{
+  background:none; border:none; cursor:pointer; font-size:24px; color:var(--border-strong);
+  transition:color .15s ease, transform .15s ease; line-height:1; padding:2px;
+}
+.rating button.on{ color:var(--sand); }
+.rating button:hover{ transform:scale(1.15); }
+.footer-note{ color:var(--text-muted); font-size:13px; }
+
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <div class="brand">
+      <div class="brand-mark">أ</div>
+      <div>
+        <div class="brand-name">فريق أمل</div>
+        <div class="brand-sub">البوابة الداخلية للموظفين</div>
+      </div>
+    </div>
+    <div class="header-date" id="headerDate">سبتمبر 2026</div>
+  </div>
+</header>
+
+<div class="gender-switch container reveal" style="gap:12px; flex-wrap:wrap;">
+  <div class="gender-toggle" role="group" aria-label="Choose view">
+    <button class="gender-btn" type="button" data-gender="m">👦 Boys</button>
+    <button class="gender-btn" type="button" data-gender="f">👧 Girls</button>
+    <button class="gender-btn" type="button" id="amalModeBtn">🌟 Amal Mode</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="quote-banner reveal" id="quoteBanner">
+    <span class="q-ico">💬</span>
+    <p id="quoteText"></p>
+  </div>
+</div>
+
+<div class="edit-mode-banner">وضع التعديل مفعّل — اضغط على أي نص لتعديله، أو اضغط على أي نقطة بجدول الدوام لتغيير حالتها</div>
+
+<!-- AMAL MODE PASSWORD GATE -->
+<div class="modal-backdrop" id="amalPasswordModal">
+  <div class="modal-card">
+    <button class="modal-close" id="amalModalCloseBtn" aria-label="إغلاق">✕</button>
+    <h3 class="modal-title">🌌 دخول مساحة أمل</h3>
+    <div class="field">
+      <label for="amalPassword">كلمة المرور</label>
+      <input id="amalPassword" type="password" placeholder="••••" inputmode="numeric">
+    </div>
+    <div class="modal-error" id="amalPasswordError">كلمة المرور غير صحيحة</div>
+    <button class="panel-btn" id="amalPasswordSubmitBtn" style="background:var(--primary);color:#fff;border-color:transparent;">دخول</button>
+  </div>
+</div>
+
+<!-- AMAL DASHBOARD -->
+<div class="amal-dashboard" id="amalDashboard">
+  <div class="amal-dash-inner container" style="display:flex; flex-direction:column;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--sp-5);">
+      <button class="settings-gear" id="settingsGearBtn" type="button" title="الإعدادات" aria-label="الإعدادات">⚙️</button>
+      <button class="amal-dash-close" id="amalDashCloseBtn" type="button" style="margin:0;">✕ إغلاق</button>
+    </div>
+
+    <div class="amal-hero">
+      <div class="amal-hero-emoji">🌌👑🚀</div>
+      <h1 id="amalHeroLine">حيّا الله مديرتنا اللي أطلقت فريقها للمجرة!</h1>
+      <p>كل يوم قيادة، وكل شهر إنجاز جديد — هذي مساحتك الخاصة بملخصات وتقارير الفريق.</p>
+    </div>
+
+    <div class="amal-stats-grid" id="amalStatsGrid"></div>
+    <div class="amal-highlight-row" id="amalHighlightRow"></div>
+
+    <div class="amal-report-card">
+      <h3>تقرير أداء الفريق — من 1 إلى 22 أغسطس 2026</h3>
+      <div style="overflow-x:auto;">
+        <table class="amal-report">
+          <thead><tr id="amalReportHead"></tr></thead>
+          <tbody id="amalReportBody"></tbody>
+          <tfoot><tr id="amalReportFoot"></tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-backdrop" id="settingsModal">
+  <div class="modal-card">
+    <button class="modal-close" id="modalCloseBtn" aria-label="إغلاق">✕</button>
+
+    <div id="passwordGate">
+      <h3 class="modal-title">دخول الإعدادات</h3>
+      <div class="field">
+        <label for="settingsPassword">كلمة المرور</label>
+        <input id="settingsPassword" type="password" placeholder="••••" inputmode="numeric">
+      </div>
+      <div class="modal-error" id="passwordError">كلمة المرور غير صحيحة</div>
+      <button class="panel-btn" id="passwordSubmitBtn" style="background:var(--primary);color:#fff;border-color:transparent;">دخول</button>
+    </div>
+
+    <div id="controlPanel" style="display:none;">
+      <h3 class="modal-title">لوحة التحكم</h3>
+
+      <div class="panel-row">
+        <div>
+          <b>وضع التعديل</b>
+          <small>فعّليه لتعديل أي نص أو حالة بالجدول مباشرة</small>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="editModeToggle">
+          <span></span>
+        </label>
+      </div>
+
+      <button class="panel-btn danger" id="resetEditsBtn">إعادة تعيين كل التعديلات</button>
+      <button class="panel-btn" id="logoutBtn">تسجيل الخروج من الإعدادات</button>
+
+      <div class="panel-section">
+        <div class="panel-section-title">الشهر والسنة</div>
+        <div class="panel-mini-form">
+          <select id="monthSelect">
+            <option value="0">يناير</option><option value="1">فبراير</option><option value="2">مارس</option>
+            <option value="3">أبريل</option><option value="4">مايو</option><option value="5">يونيو</option>
+            <option value="6">يوليو</option><option value="7">أغسطس</option><option value="8" selected>سبتمبر</option>
+            <option value="9">أكتوبر</option><option value="10">نوفمبر</option><option value="11">ديسمبر</option>
+          </select>
+          <input id="yearInput" type="number" value="2026" style="max-width:100px;">
+          <button id="updateMonthBtn" type="button">تحديث</button>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-title">إضافة موظف</div>
+        <div class="panel-mini-form">
+          <input id="newEmpName" type="text" placeholder="اسم الموظف">
+          <select id="newEmpGender">
+            <option value="m">ذكر</option>
+            <option value="f">أنثى</option>
+          </select>
+          <button id="addEmpBtn" type="button">إضافة</button>
+        </div>
+        <div class="panel-note" style="margin-top:8px;">لحذف موظف: فعّلي وضع التعديل، وبيظهر زر ✕ صغير بجانب اسمه بالجدول.</div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-title">سجل التعديلات</div>
+        <ul class="log-list" id="editLogList"></ul>
+      </div>
+
+      <div class="panel-note">
+        ملاحظة: هذا الموقع ملف واحد بدون قاعدة بيانات، فالتعديلات تُحفظ داخل هذا المتصفح فقط ولن تظهر تلقائيًا عند باقي الموظفين — إذا تبين نشرها للجميع، لازم تحديث الملف نفسه وإرساله من جديد.
+      </div>
+    </div>
+  </div>
+</div>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero container">
+    <div class="hero-grid">
+      <div class="reveal">
+        <div class="hero-eyebrow" data-m="أهلاً وسهلاً بالتيم الرهيب 💪" data-f="أهلاً وسهلاً بالتيم الرهيب 🌸">أهلاً وسهلاً بالتيم الرهيب</div>
+        <h1 class="hero-title" data-edit-key="hero-title">جدولكم ومستجدات شهركم، <span>في مكان واحد</span></h1>
+        <p class="hero-desc" data-edit-key="hero-desc">كل ما يخص فريق العمل هذا الشهر: الجدول، الأحداث، تنبيهات الدوام، ونموذج سريع لاقتراح راحتكم القادمة.</p>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="ico">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </div>
+            <div><b>الجدول الشهري</b><small id="heroStatMonth">سبتمبر 2026</small></div>
+          </div>
+          <div class="hero-stat">
+            <div class="ico">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-4.4-9.5-9C1 8.5 2.7 5 6.2 5c2 0 3.3 1 4 2 .7-1 2-2 4-2 3.5 0 5.2 3.5 3.7 7-2.5 4.6-5.9 9-5.9 9Z" stroke="currentColor" stroke-width="1.8"/></svg>
+            </div>
+            <div><b>أمنيات أكتوبر</b><small>شاركونا رغباتكم</small></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual reveal">
+        <div class="hero-month-label">الشهر الحالي</div>
+        <div>
+          <div class="hero-month" data-edit-key="hero-month">سبتمبر</div>
+          <div class="hero-year" data-edit-key="hero-year">2026</div>
+        </div>
+        <div class="hero-ayah" data-edit-key="hero-ayah">﴿رَبِّ اشْرَحْ لِي صَدْرِي ۝ وَيَسِّرْ لِي أَمْرِي﴾</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HIGHLIGHTS -->
+  <section class="section container">
+    <div class="section-head reveal">
+      <div>
+        <h2 class="section-title">أبرز الأحداث</h2>
+        <div class="section-sub">آخر مستجدات الفريق هذا الشهر</div>
+      </div>
+    </div>
+    <div class="highlight-grid">
+      <div class="highlight-card reveal">
+        <div class="highlight-ico">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+          <h3 data-edit-key="hl1-title">نرحب بانضمام الزملاء الجدد</h3>
+          <p data-edit-key="hl1-body">نرحب بالزميلتين نجود ورؤوم، ونتمنى لكم في مكانكم الجديد التوفيق والنجاح.</p>
+        </div>
+      </div>
+      <div class="highlight-card gold reveal">
+        <div class="highlight-ico">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 15a6 6 0 1 0 0-12 6 6 0 0 0 0 12ZM8.5 14 7 22l5-3 5 3-1.5-8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <h3 data-edit-key="hl2-title">مبروك للمركز الأول في Scorecard</h3>
+          <p data-edit-key="hl2-body">ألف مبروك لزميلتنا أسماء تحقيقها المركز الأول لشهر يونيو، إنجاز مستحق يعكس تميزك وجهودك الرائعة.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SPOTLIGHT + WISHES -->
+  <section class="section container">
+    <div class="editorial-grid">
+      <div class="spotlight card reveal">
+        <div class="spotlight-avatar">أ</div>
+        <div class="spotlight-body">
+          <div class="spotlight-kicker" data-edit-key="spot-kicker">موظفة الشهر — أغسطس</div>
+          <h3 class="spotlight-name" data-edit-key="spot-name">أسماء</h3>
+          <p class="spotlight-quote" data-edit-key="spot-quote">تميز واستمرارية لافتة في الأداء، وأثر واضح على نتائج الفريق هذا الشهر.</p>
+          <span class="spotlight-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 15a6 6 0 1 0 0-12 6 6 0 0 0 0 12Z" stroke="currentColor" stroke-width="2"/></svg>
+            المركز الأول — Scorecard
+          </span>
+        </div>
+      </div>
+
+      <div class="wishes card reveal">
+        <h3 data-edit-key="wishes-title">أمنيات أكتوبر</h3>
+        <div class="section-sub" style="margin-bottom:4px">شاركونا مناسباتكم القادمة</div>
+        <div class="wish-item"><b data-edit-key="wish1-b">إجازة سنوية مخططة</b><span data-edit-key="wish1-s">حدّثوا طلباتكم مبكرًا</span></div>
+        <div class="wish-item"><b data-edit-key="wish2-b">مناسبات عائلية</b><span data-edit-key="wish2-s">أخبرونا لنُراعيها بالجدول</span></div>
+        <div class="wish-item"><b data-edit-key="wish3-b">اقتراحات عامة</b><span data-edit-key="wish3-s">عبر نموذج الجدول أدناه</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FRIDAY NOTICE -->
+  <section class="section container">
+    <div class="notice reveal">
+      <div class="notice-ico">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 8v5l3 2" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="1.8"/></svg>
+      </div>
+      <div class="notice-text">
+        <b data-edit-key="notice-b">وقت التوقف لصلاة الجمعة: من 12:15م إلى 1:15م</b>
+        <span data-edit-key="notice-s">يُرجى الالتزام بالعودة في الوقت المحدد، وتقبّل الله منا ومنكم صالح الأعمال.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCHEDULE REQUEST FORM -->
+  <section class="section container">
+    <div class="section-head reveal">
+      <div>
+        <h2 class="section-title" data-m="تحب نرتب لك جدول الشهر حسب رغبتك؟" data-f="تحبين نرتب لك جدول الشهر حسب رغبتك؟">تحبّون نرتّب جدول الشهر حسب رغباتكم؟</h2>
+        <div class="section-sub" data-m="جاوب على الأسئلة التالية وسنراعي رغبتك قدر الإمكان" data-f="جاوبي على الأسئلة التالية وسنراعي رغبتك قدر الإمكان">جاوبوا على الأسئلة التالية وسنراعي رغباتكم قدر الإمكان</div>
+      </div>
+    </div>
+    <form class="form-card card reveal" id="scheduleForm">
+      <div class="form-grid">
+        <div class="field full">
+          <label for="empName">الاسم</label>
+          <input id="empName" name="employee_name" type="text" placeholder="اكتب اسمك الكامل" data-ph-m="اكتب اسمك الكامل" data-ph-f="اكتبي اسمك الكامل" required>
+        </div>
+        <div class="field">
+          <label for="offDays" data-m="متى تفضّل تكون أيام راحتك؟" data-f="متى تفضّلين تكون أيام راحتك؟">متى تفضّل تكون أيام راحتك؟</label>
+          <input id="offDays" name="preferred_days_off" type="text" placeholder="مثال: الجمعة والسبت">
+        </div>
+        <div class="field">
+          <label for="empNotes">هل عندك أي ملاحظات لجدولك القادم؟</label>
+          <input id="empNotes" name="notes" type="text" placeholder="اختياري">
+        </div>
+      </div>
+      <div class="form-note">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex:none;margin-top:2px"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>عند اختيار الأوف، يُراعى ألا يزيد عدد اتصال الموظف عن 7 أيام عمل متتالية قبل الأوف الجديد.</span>
+      </div>
+      <button class="btn-submit" type="submit">إرسال</button>
+      <div class="form-success" id="formSuccess">تم استلام طلبك، شكرًا لك — سنأخذ رغبتك بعين الاعتبار عند إعداد الجدول القادم.</div>
+    </form>
+  </section>
+
+  <!-- CALENDAR -->
+  <section class="section container">
+    <div class="cal-card card reveal">
+      <div class="cal-top">
+        <h3 class="cal-title" id="calTitle">تقويم سبتمبر 2026</h3>
+        <div class="cal-legend">
+          <span><i style="background:var(--sand-tint)"></i>عطلة نهاية الأسبوع</span>
+          <span><i style="background:var(--primary)"></i>اليوم</span>
+        </div>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+  </section>
+
+  <!-- EMPLOYEE SCHEDULE -->
+  <section class="section container">
+    <div class="schedule-head reveal">
+      <div>
+        <h2 class="section-title" data-m="جدول دوام الموظفين" data-f="جدول دوام الموظفات">جدول دوام الموظفين</h2>
+        <div class="section-sub" id="scheduleSub" data-m="سبتمبر 2026 — أيام العمل والإجازة لكل موظف" data-f="سبتمبر 2026 — أيام العمل والإجازة لكل موظفة">سبتمبر 2026 — أيام العمل والإجازة لكل موظف</div>
+      </div>
+      <div class="legend-row">
+        <span class="legend-chip"><span class="dot work"></span> دوام</span>
+        <span class="legend-chip"><span class="dot off"></span> أوف</span>
+        <span class="legend-chip"><span class="dot special"></span> إجازة خاصة</span>
+      </div>
+    </div>
+
+    <div class="myschedule reveal" id="myScheduleWidget"></div>
+
+    <div class="schedule-card card reveal">
+      <div class="schedule-scroll">
+        <table class="schedule" id="scheduleTable">
+          <thead>
+            <tr id="scheduleHeadRow"></tr>
+          </thead>
+          <tbody id="scheduleBody"></tbody>
+          <tfoot class="schedule-foot">
+            <tr id="scheduleFootRow"></tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer container">
+  <div class="rating" id="rating">
+    <button data-v="1">★</button>
+    <button data-v="2">★</button>
+    <button data-v="3">★</button>
+    <button data-v="4">★</button>
+    <button data-v="5">★</button>
+  </div>
+  <div class="footer-note" data-edit-key="footer-note">بوابة فريق أمل الداخلية · تصميم مطوّر بروح الهوية الأصلية · © 2026</div>
+</footer>
+
+<script>
+/* ============================================================
+   DATA — edit here to update the month without touching markup
+   ============================================================ */
+const DAYS = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const WEEKEND_INDEXES = [5,6]; // الجمعة والسبت
+const GENDER_KEY = 'amal-portal-gender';
+const OVERRIDES_KEY = 'amal-portal-overrides';
+const ADMIN_KEY = 'amal-portal-admin';
+const LOG_KEY = 'amal-portal-log';
+const MONTH_NAMES = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+
+const EMPLOYEES = [
+  { id:1945, name:"فارس",         gender:"m", status:["off","off","work","work","work","work","work"] },
+  { id:1824, name:"محمد الملاوي", gender:"m", status:["work","off","off","work","work","work","work"] },
+  { id:1962, name:"عائشة",        gender:"f", status:["work","work","off","off","work","work","work"] },
+  { id:1792, name:"مهند",         gender:"m", status:["work","work","work","work","off","off","work"] },
+  { id:1255, name:"سماهر",        gender:"f", status:["work","work","work","work","off","off","work"] },
+  { id:1795, name:"وليد",         gender:"m", status:["special","special","special","special","off","off","work"] },
+  { id:1794, name:"لجين",         gender:"f", status:["work","work","work","work","work","off","off"] },
+  { id:1311, name:"بدرية",        gender:"f", status:["work","work","work","work","work","off","off"] },
+  { id:1682, name:"أسماء",        gender:"f", status:["work","work","work","work","work","off","off"] },
+  { id:1620, name:"عبدالله",      gender:"m", status:["work","work","work","work","work","off","off"] },
+  { id:2144, name:"رؤوم",         gender:"f", status:["work","work","work","work","work","off","off"] },
+  { id:2147, name:"نجود",         gender:"f", status:["work","work","work","work","work","off","off"] },
+];
+
+/* ============================================================
+   SCHEDULE TABLE
+   ============================================================ */
+function getOverrides(){
+  try{
+    const ov = JSON.parse(localStorage.getItem(OVERRIDES_KEY)) || {};
+    return { text: ov.text || {}, employees: ov.employees || {}, added: ov.added || [], removed: ov.removed || [], settings: ov.settings || {} };
+  }catch(e){ return { text:{}, employees:{}, added:[], removed:[], settings:{} }; }
+}
+function saveOverrides(ov){
+  try{ localStorage.setItem(OVERRIDES_KEY, JSON.stringify(ov)); }catch(e){ /* ignore */ }
+}
+
+function getEffectiveEmployees(){
+  const ov = getOverrides();
+  const all = EMPLOYEES.concat(ov.added).filter(e => !ov.removed.includes(e.id));
+  return all.map(emp => {
+    const empOv = ov.employees[emp.id] || {};
+    const status = emp.status.map((s, i) => (empOv.status && empOv.status[i]) ? empOv.status[i] : s);
+    return { id: emp.id, gender: emp.gender, name: empOv.name !== undefined ? empOv.name : emp.name, status };
+  });
+}
+
+function buildScheduleTable(){
+  const headRow = document.getElementById('scheduleHeadRow');
+  const body = document.getElementById('scheduleBody');
+  const footRow = document.getElementById('scheduleFootRow');
+  const list = getEffectiveEmployees();
+
+  let headHTML = '<th class="emp-name" data-m="الموظف" data-f="الموظفة">الموظف</th><th>#</th>';
+  DAYS.forEach(d => headHTML += `<th>${d}</th>`);
+  headRow.innerHTML = headHTML;
+
+  const dotFor = s => s === 'work' ? '<span class="dot work"></span>'
+                     : s === 'special' ? '<span class="dot special"></span>'
+                     : '<span class="dot off"></span>';
+
+  let bodyHTML = '';
+  list.forEach((emp, i) => {
+    const genderDot = `<span class="emp-gender-dot ${emp.gender === 'f' ? 'g-f' : 'g-m'}"></span>`;
+    bodyHTML += `<tr data-emp-row="${emp.id}"><td class="emp-name"><span class="emp-name-text" data-emp-id="${emp.id}">${emp.name}</span>${genderDot}<button class="emp-delete-btn" data-emp-id="${emp.id}" title="حذف الموظف">✕</button></td><td class="emp-id">${i+1}</td>`;
+    emp.status.forEach((s, dayIdx) => {
+      bodyHTML += `<td><div class="status-cell" data-emp-id="${emp.id}" data-day="${dayIdx}">${dotFor(s)}</div></td>`;
+    });
+    bodyHTML += '</tr>';
+  });
+  body.innerHTML = bodyHTML;
+
+  let footHTML = '<td class="emp-name">أيام العمل</td><td></td>';
+  DAYS.forEach((d, dayIdx) => {
+    const count = list.filter(e => e.status[dayIdx] === 'work').length;
+    footHTML += `<td>${count}</td>`;
+  });
+  footRow.innerHTML = footHTML;
+
+  wireEditableNames();
+  wireStatusCells();
+  wireDeleteButtons();
+  renderMySchedule();
+}
+buildScheduleTable();
+
+function wireDeleteButtons(){
+  document.querySelectorAll('.emp-delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(!document.body.classList.contains('edit-mode')) return;
+      const id = btn.dataset.empId;
+      const list = getEffectiveEmployees();
+      const emp = list.find(e => String(e.id) === String(id));
+      if(!confirm(`حذف ${emp ? emp.name : 'هذا الموظف'} من الجدول؟`)) return;
+      const ov = getOverrides();
+      ov.removed.push(isNaN(id) ? id : Number(id));
+      saveOverrides(ov);
+      logEdit(`تم حذف الموظف: ${emp ? emp.name : id}`);
+      buildScheduleTable();
+    });
+  });
+}
+
+
+
+/* ============================================================
+   CALENDAR — August 2026, generated dynamically
+   ============================================================ */
+function buildCalendar(year, month){ // month: 0-indexed
+  const grid = document.getElementById('calGrid');
+  const dowLabels = ["أحد","اثنين","ثلاثاء","أربعاء","خميس","جمعة","سبت"];
+  let html = dowLabels.map(l => `<div class="cal-dow">${l}</div>`).join('');
+
+  const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const today = new Date();
+  const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+
+  for(let i=0;i<firstDay;i++){ html += '<div class="cal-cell empty"></div>'; }
+  for(let day=1; day<=daysInMonth; day++){
+    const dow = new Date(year, month, day).getDay();
+    const isWeekend = WEEKEND_INDEXES.includes(dow);
+    const isToday = isCurrentMonth && today.getDate() === day;
+    const cls = isToday ? 'today' : (isWeekend ? 'weekend' : '');
+    html += `<div class="cal-cell ${cls}">${day}</div>`;
+  }
+  grid.innerHTML = html;
+}
+// restore saved month/year (if the admin changed it before), else default to September 2026
+const savedSettings = getOverrides().settings;
+const initMonthIdx = (savedSettings && savedSettings.monthIdx !== undefined) ? savedSettings.monthIdx : 8;
+const initYear = (savedSettings && savedSettings.year) ? savedSettings.year : 2026;
+applyMonthYear(initMonthIdx, initYear, { silent:true });
+document.getElementById('monthSelect').value = String(initMonthIdx);
+document.getElementById('yearInput').value = initYear;
+
+/* ============================================================
+   BOYS / GIRLS / AMAL VIEW TOGGLE + TEXT & SCHEDULE OVERRIDES
+   ============================================================ */
+function applyTextOverrides(){
+  const ov = getOverrides();
+  document.querySelectorAll('[data-edit-key]').forEach(el => {
+    const key = el.dataset.editKey;
+    if(ov.text[key] !== undefined) el.textContent = ov.text[key];
+  });
+}
+
+function applyGender(g){
+  document.body.classList.toggle('theme-girls', g === 'f');
+
+  const ov = getOverrides();
+  document.querySelectorAll('[data-m][data-f]').forEach(el => {
+    const key = el.dataset.editKey;
+    if(key && ov.text[key] !== undefined) return; // a manual edit wins over the gender wording
+    el.textContent = g === 'f' ? el.dataset.f : el.dataset.m;
+  });
+  document.querySelectorAll('[data-ph-m][data-ph-f]').forEach(el => {
+    el.setAttribute('placeholder', g === 'f' ? el.dataset.phF : el.dataset.phM);
+  });
+  document.querySelectorAll('.gender-btn[data-gender]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.gender === g);
+  });
+
+  try{ localStorage.setItem(GENDER_KEY, g); }catch(e){ /* storage unavailable — ignore */ }
+}
+
+document.querySelectorAll('.gender-btn[data-gender]').forEach(btn => {
+  btn.addEventListener('click', () => applyGender(btn.dataset.gender));
+});
+
+let initialGender = 'm';
+try{ initialGender = localStorage.getItem(GENDER_KEY) || 'm'; }catch(e){ /* ignore */ }
+applyGender(initialGender);
+applyTextOverrides();
+
+/* ============================================================
+   AMAL MODE — password-gated personal dashboard
+   ============================================================ */
+const AMAL_PASSWORD = '1999'; // same as the settings password for now — change here if she wants her own
+const amalModeBtn = document.getElementById('amalModeBtn');
+const amalPasswordModal = document.getElementById('amalPasswordModal');
+const amalPasswordInput = document.getElementById('amalPassword');
+const amalPasswordError = document.getElementById('amalPasswordError');
+const amalDashboard = document.getElementById('amalDashboard');
+
+const AMAL_HERO_LINES = [
+  "حيّا الله مديرتنا اللي أطلقت فريقها للمجرة! 🚀",
+  "أهلاً بالقائدة التي تصنع فرق حقيقي كل شهر 👑",
+  "من هنا تدار الإنجازات... أهلاً يا كبيرة الكبار ✨",
+  "وصلت صاحبة القرار اللي تسيّر السفينة بثبات ⚓"
+];
+
+amalModeBtn.addEventListener('click', () => {
+  amalPasswordInput.value = '';
+  amalPasswordError.classList.remove('show');
+  amalPasswordModal.classList.add('show');
+  amalPasswordInput.focus();
+});
+document.getElementById('amalModalCloseBtn').addEventListener('click', () => amalPasswordModal.classList.remove('show'));
+amalPasswordModal.addEventListener('click', (e) => { if(e.target === amalPasswordModal) amalPasswordModal.classList.remove('show'); });
+
+function openAmalDashboard(){
+  amalPasswordModal.classList.remove('show');
+  document.getElementById('amalHeroLine').textContent = AMAL_HERO_LINES[Math.floor(Math.random() * AMAL_HERO_LINES.length)];
+  buildAmalReport();
+  amalDashboard.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+document.getElementById('amalPasswordSubmitBtn').addEventListener('click', () => {
+  if(amalPasswordInput.value === AMAL_PASSWORD) openAmalDashboard();
+  else amalPasswordError.classList.add('show');
+});
+amalPasswordInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') document.getElementById('amalPasswordSubmitBtn').click(); });
+document.getElementById('amalDashCloseBtn').addEventListener('click', () => {
+  amalDashboard.classList.remove('show');
+  document.body.style.overflow = '';
+});
+
+const AGENT_REPORT = [
+  { id:1255, name:"Samaher Owayli Alsullami",   answered:399, outbound:0, abandoned:0, aht:"0:05:16", asa:"0:00:02", csat:90, staffTime:"7:17:47",  breakTime:"0:52:25" },
+  { id:1620, name:"Abdullah Talal Mulla",       answered:736, outbound:0, abandoned:0, aht:"0:03:27", asa:"0:00:02", csat:91, staffTime:"7:08:15",  breakTime:"0:37:36" },
+  { id:1792, name:"Muhannad Almalki",           answered:388, outbound:0, abandoned:0, aht:"0:02:56", asa:"0:00:02", csat:94, staffTime:"7:10:38",  breakTime:"0:47:24" },
+  { id:1794, name:"Lujain Ibrahim Betar",       answered:708, outbound:0, abandoned:1, aht:"0:03:28", asa:"0:00:02", csat:94, staffTime:"7:20:39",  breakTime:"0:45:15" },
+  { id:1824, name:"Mohammed Almalawi",          answered:294, outbound:0, abandoned:0, aht:"0:03:08", asa:"0:00:03", csat:91, staffTime:"7:08:21",  breakTime:"0:56:21" },
+  { id:1311, name:"Badriya Nasser Alshanbari",  answered:262, outbound:0, abandoned:3, aht:"0:04:15", asa:"0:00:03", csat:97, staffTime:"6:09:01",  breakTime:"0:31:48" },
+  { id:1861, name:"Waleed Al Otaibi",           answered:654, outbound:0, abandoned:3, aht:"0:03:05", asa:"0:00:02", csat:89, staffTime:"7:11:43",  breakTime:"0:58:43" },
+  { id:1945, name:"Faris Alahmadi",             answered:404, outbound:0, abandoned:0, aht:"0:02:49", asa:"0:00:02", csat:83, staffTime:"5:52:24",  breakTime:"0:50:19" },
+  { id:1963, name:"Asma Alsulami",              answered:198, outbound:0, abandoned:0, aht:"0:03:07", asa:"0:00:02", csat:94, staffTime:"9:10:56",  breakTime:"0:50:21" },
+  { id:1962, name:"Aeshah Albarakati",          answered:726, outbound:0, abandoned:0, aht:"0:03:45", asa:"0:00:02", csat:95, staffTime:"6:57:56",  breakTime:"0:48:37" },
+  { id:2144, name:"Raoom Bassam Alhindi",       answered:427, outbound:0, abandoned:1, aht:"0:05:17", asa:"0:00:04", csat:96, staffTime:"10:48:15", breakTime:"0:33:13" },
+  { id:2147, name:"Nujud Abdullah Alluqmani",   answered:405, outbound:0, abandoned:1, aht:"0:05:40", asa:"0:00:04", csat:94, staffTime:"10:56:50", breakTime:"0:43:30" },
+];
+const AGENT_REPORT_TOTAL = { answered:5601, outbound:0, abandoned:9, aht:"0:03:48", asa:"0:00:02", csat:93, staffTime:"7:49:44", breakTime:"0:44:59" };
+
+function csatClass(v){ return v >= 93 ? 'csat-high' : v >= 88 ? 'csat-mid' : 'csat-low'; }
+
+function buildAmalReport(){
+  const statsGrid = document.getElementById('amalStatsGrid');
+  statsGrid.innerHTML = `
+    <div class="amal-stat-card"><span>إجمالي المكالمات المستقبلة</span><b>${AGENT_REPORT_TOTAL.answered.toLocaleString('en-US')}</b></div>
+    <div class="amal-stat-card"><span>المكالمات المهملة</span><b>${AGENT_REPORT_TOTAL.abandoned}</b></div>
+    <div class="amal-stat-card"><span>متوسط زمن المعالجة (AHT)</span><b>${AGENT_REPORT_TOTAL.aht}</b></div>
+    <div class="amal-stat-card"><span>متوسط زمن الانتظار (ASA)</span><b>${AGENT_REPORT_TOTAL.asa}</b></div>
+    <div class="amal-stat-card"><span>متوسط نسبة الرضا CSAT</span><b>${AGENT_REPORT_TOTAL.csat}%</b></div>
+    <div class="amal-stat-card"><span>عدد الموظفين بالتقرير</span><b>${AGENT_REPORT.length}</b></div>
+  `;
+
+  const top = AGENT_REPORT.reduce((a,b) => b.csat > a.csat ? b : a);
+  const watch = AGENT_REPORT.reduce((a,b) => b.csat < a.csat ? b : a);
+  document.getElementById('amalHighlightRow').innerHTML = `
+    <div class="amal-highlight top">🏆 أعلى نسبة رضا بالفريق<b>${top.name} — ${top.csat}%</b></div>
+    <div class="amal-highlight watch">🔍 قد يحتاج متابعة ودعم<b>${watch.name} — ${watch.csat}%</b></div>
+  `;
+
+  const cols = ['ID','الموظف','مستقبلة','صادرة','مهملة','AHT','ASA','CSAT%','وقت الدوام','وقت الاستراحة'];
+  document.getElementById('amalReportHead').innerHTML = cols.map(c => `<th>${c}</th>`).join('');
+
+  document.getElementById('amalReportBody').innerHTML = AGENT_REPORT.map(a => `
+    <tr>
+      <td>${a.id}</td>
+      <td class="name-cell">${a.name}</td>
+      <td>${a.answered}</td>
+      <td>${a.outbound}</td>
+      <td>${a.abandoned}</td>
+      <td>${a.aht}</td>
+      <td>${a.asa}</td>
+      <td><span class="csat-pill ${csatClass(a.csat)}">${a.csat}%</span></td>
+      <td>${a.staffTime}</td>
+      <td>${a.breakTime}</td>
+    </tr>
+  `).join('');
+
+  const t = AGENT_REPORT_TOTAL;
+  document.getElementById('amalReportFoot').innerHTML = `
+    <td colspan="2">الإجمالي الكلي</td>
+    <td>${t.answered}</td><td>${t.outbound}</td><td>${t.abandoned}</td>
+    <td>${t.aht}</td><td>${t.asa}</td><td>${t.csat}%</td><td>${t.staffTime}</td><td>${t.breakTime}</td>
+  `;
+}
+
+/* ============================================================
+   SETTINGS MODAL, PASSWORD GATE & EDIT MODE
+   ============================================================ */
+const SETTINGS_PASSWORD = '1999';
+const gearBtn = document.getElementById('settingsGearBtn');
+const modal = document.getElementById('settingsModal');
+const modalClose = document.getElementById('modalCloseBtn');
+const passwordGate = document.getElementById('passwordGate');
+const controlPanel = document.getElementById('controlPanel');
+const passwordInput = document.getElementById('settingsPassword');
+const passwordError = document.getElementById('passwordError');
+const editModeToggle = document.getElementById('editModeToggle');
+
+function isAdmin(){
+  try{ return localStorage.getItem(ADMIN_KEY) === 'true'; }catch(e){ return false; }
+}
+function showControlPanel(){
+  passwordGate.style.display = 'none';
+  controlPanel.style.display = 'block';
+  renderLog();
+}
+function openModal(){
+  modal.classList.add('show');
+  if(isAdmin()) showControlPanel();
+  else{
+    passwordGate.style.display = 'block';
+    controlPanel.style.display = 'none';
+    passwordInput.value = '';
+    passwordError.classList.remove('show');
+  }
+}
+function closeModal(){ modal.classList.remove('show'); }
+
+gearBtn.addEventListener('click', openModal);
+modalClose.addEventListener('click', closeModal);
+modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
+
+document.getElementById('passwordSubmitBtn').addEventListener('click', () => {
+  if(passwordInput.value === SETTINGS_PASSWORD){
+    try{ localStorage.setItem(ADMIN_KEY, 'true'); }catch(e){}
+    showControlPanel();
+  }else{
+    passwordError.classList.add('show');
+  }
+});
+passwordInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') document.getElementById('passwordSubmitBtn').click(); });
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  try{ localStorage.removeItem(ADMIN_KEY); }catch(e){}
+  setEditMode(false);
+  editModeToggle.checked = false;
+  closeModal();
+});
+
+document.getElementById('resetEditsBtn').addEventListener('click', () => {
+  if(!confirm('هذا يمسح كل التعديلات المحفوظة بهذا المتصفح. متأكد؟')) return;
+  try{ localStorage.removeItem(OVERRIDES_KEY); }catch(e){}
+  location.reload();
+});
+
+function setEditMode(on){
+  document.body.classList.toggle('edit-mode', on);
+  document.querySelectorAll('[data-edit-key]').forEach(el => { el.contentEditable = on; });
+  document.querySelectorAll('.emp-name-text').forEach(el => { el.contentEditable = on; });
+}
+
+editModeToggle.addEventListener('change', () => setEditMode(editModeToggle.checked));
+
+// save a text edit when the admin clicks away from an editable element
+document.addEventListener('focusout', (e) => {
+  if(!document.body.classList.contains('edit-mode')) return;
+  const el = e.target;
+  if(el.dataset && el.dataset.editKey){
+    const ov = getOverrides();
+    ov.text[el.dataset.editKey] = el.textContent;
+    saveOverrides(ov);
+    logEdit(`تعديل نص: ${el.dataset.editKey}`);
+  }
+});
+
+function wireEditableNames(){
+  document.querySelectorAll('.emp-name-text').forEach(el => {
+    el.contentEditable = document.body.classList.contains('edit-mode');
+    el.addEventListener('focusout', () => {
+      if(!document.body.classList.contains('edit-mode')) return;
+      const id = el.dataset.empId;
+      const ov = getOverrides();
+      ov.employees[id] = ov.employees[id] || {};
+      ov.employees[id].name = el.textContent.trim();
+      saveOverrides(ov);
+      logEdit(`تغيير اسم موظف إلى: ${el.textContent.trim()}`);
+    });
+  });
+}
+
+function wireStatusCells(){
+  const cycle = { work:'off', off:'special', special:'work' };
+  document.querySelectorAll('.status-cell').forEach(cell => {
+    cell.addEventListener('click', () => {
+      if(!document.body.classList.contains('edit-mode')) return;
+      const id = cell.dataset.empId;
+      const day = cell.dataset.day;
+      const dotEl = cell.querySelector('.dot');
+      const current = dotEl.classList.contains('work') ? 'work' : dotEl.classList.contains('special') ? 'special' : 'off';
+      const next = cycle[current];
+      dotEl.className = 'dot ' + next;
+      const ov = getOverrides();
+      ov.employees[id] = ov.employees[id] || {};
+      ov.employees[id].status = ov.employees[id].status || {};
+      ov.employees[id].status[day] = next;
+      saveOverrides(ov);
+      logEdit(`تغيير حالة يوم ${DAYS[day]} إلى ${next === 'work' ? 'دوام' : next === 'off' ? 'أوف' : 'إجازة خاصة'}`);
+      buildScheduleTable(); // refresh totals row
+    });
+  });
+}
+
+/* ============================================================
+   EDIT LOG
+   ============================================================ */
+function logEdit(action){
+  let log = [];
+  try{ log = JSON.parse(localStorage.getItem(LOG_KEY)) || []; }catch(e){}
+  log.unshift({ time: new Date().toLocaleString('ar-EG', { dateStyle:'medium', timeStyle:'short' }), action });
+  log = log.slice(0, 30);
+  try{ localStorage.setItem(LOG_KEY, JSON.stringify(log)); }catch(e){}
+  renderLog();
+}
+function renderLog(){
+  const list = document.getElementById('editLogList');
+  if(!list) return;
+  let log = [];
+  try{ log = JSON.parse(localStorage.getItem(LOG_KEY)) || []; }catch(e){}
+  if(!log.length){ list.innerHTML = '<li class="log-empty">ما فيه تعديلات مسجلة بعد.</li>'; return; }
+  list.innerHTML = log.map(entry => `<li><time>${entry.time}</time>${entry.action}</li>`).join('');
+}
+
+/* ============================================================
+   MONTH / YEAR CONTROL
+   ============================================================ */
+function applyMonthYear(monthIdx, year, opts){
+  const silent = opts && opts.silent;
+  const monthName = MONTH_NAMES[monthIdx];
+
+  const ov = getOverrides();
+  ov.text['hero-month'] = monthName;
+  ov.text['hero-year'] = String(year);
+  ov.settings.monthIdx = monthIdx;
+  ov.settings.year = year;
+  saveOverrides(ov);
+
+  document.querySelector('[data-edit-key="hero-month"]').textContent = monthName;
+  document.querySelector('[data-edit-key="hero-year"]').textContent = year;
+  document.getElementById('calTitle').textContent = `تقويم ${monthName} ${year}`;
+  document.getElementById('headerDate').textContent = `${monthName} ${year}`;
+  document.getElementById('heroStatMonth').textContent = `${monthName} ${year}`;
+
+  const sub = document.getElementById('scheduleSub');
+  sub.dataset.m = `${monthName} ${year} — أيام العمل والإجازة لكل موظف`;
+  sub.dataset.f = `${monthName} ${year} — أيام العمل والإجازة لكل موظفة`;
+  sub.textContent = document.body.classList.contains('theme-girls') ? sub.dataset.f : sub.dataset.m;
+
+  buildCalendar(year, monthIdx);
+  if(!silent) logEdit(`تغيير الشهر إلى ${monthName} ${year}`);
+}
+
+document.getElementById('updateMonthBtn').addEventListener('click', () => {
+  const monthIdx = Number(document.getElementById('monthSelect').value);
+  const year = Number(document.getElementById('yearInput').value) || 2026;
+  applyMonthYear(monthIdx, year);
+});
+
+/* ============================================================
+   ADD EMPLOYEE
+   ============================================================ */
+document.getElementById('addEmpBtn').addEventListener('click', () => {
+  const nameInput = document.getElementById('newEmpName');
+  const name = nameInput.value.trim();
+  if(!name){ nameInput.focus(); return; }
+  const gender = document.getElementById('newEmpGender').value;
+  const id = 'custom-' + Date.now();
+  const ov = getOverrides();
+  ov.added.push({ id, name, gender, status:["work","work","work","work","work","off","off"] });
+  saveOverrides(ov);
+  logEdit(`تمت إضافة موظف جديد: ${name}`);
+  nameInput.value = '';
+  buildScheduleTable();
+});
+
+/* ============================================================
+   DAILY QUOTE
+   ============================================================ */
+const QUOTES = [
+  "أفضل استثمار هو في تطوير نفسك ومهاراتك كل يوم.",
+  "العمل الجماعي يحوّل الأهداف الصعبة إلى إنجازات ممكنة.",
+  "الانضباط بالمواعيد هو أول علامات الاحترافية.",
+  "ابتسامة بسيطة تقدر تغيّر جو يوم كامل بالمكتب.",
+  "التعلّم المستمر هو الفرق بين النمو والركود.",
+  "كل مهمة صغيرة تنجزها اليوم تبني إنجازًا أكبر غدًا.",
+  "التواصل الواضح يوفر وقت ويمنع كثير من سوء الفهم.",
+  "الراحة الجيدة جزء من الإنتاجية، مو ضدها.",
+  "شكر بسيط لزميلك يصنع فرق أكبر مما تتخيل.",
+  "النجاح الحقيقي يُقاس بالتقدم اليومي، مو بالكمال."
+];
+function renderDailyQuote(){
+  const start = new Date(new Date().getFullYear(), 0, 0);
+  const diff = new Date() - start;
+  const dayOfYear = Math.floor(diff / 86400000);
+  const quote = QUOTES[dayOfYear % QUOTES.length];
+  document.getElementById('quoteText').textContent = quote;
+}
+renderDailyQuote();
+
+/* ============================================================
+   MY SCHEDULE (personal identification + reminder)
+   ============================================================ */
+const MY_NAME_KEY = 'amal-portal-my-name';
+
+function computeNextOff(statusArr){
+  const today = new Date().getDay(); // 0=Sun..6=Sat, matches DAYS/status order
+  for(let i = 0; i < 7; i++){
+    const idx = (today + i) % 7;
+    if(statusArr[idx] !== 'work') return { daysAway:i, idx, status:statusArr[idx] };
+  }
+  return null;
+}
+function reminderText(info){
+  if(!info) return 'ما عندك أيام أوف هالأسبوع 💪';
+  const label = info.status === 'special' ? 'إجازة خاصة' : 'أوف';
+  if(info.daysAway === 0) return `اليوم ${label} لك 🎉`;
+  if(info.daysAway === 1) return `باقي لك يوم واحد على ${label === 'أوف' ? 'الأوف' : label}`;
+  if(info.daysAway === 2) return `باقي لك يومين على ${label === 'أوف' ? 'الأوف' : label}`;
+  return `باقي لك ${info.daysAway} أيام على ${label === 'أوف' ? 'الأوف' : label} (${DAYS[info.idx]})`;
+}
+
+function renderMySchedule(){
+  const widget = document.getElementById('myScheduleWidget');
+  let myName = '';
+  try{ myName = localStorage.getItem(MY_NAME_KEY) || ''; }catch(e){}
+
+  document.querySelectorAll('table.schedule tbody tr').forEach(tr => tr.classList.remove('is-me'));
+
+  if(!myName){
+    widget.innerHTML = `
+      <span>🔎</span>
+      <input type="text" id="myNameInput" placeholder="اكتب اسمك لإبراز صفك بالجدول" list="empNamesList">
+      <datalist id="empNamesList">${getEffectiveEmployees().map(e => `<option value="${e.name}">`).join('')}</datalist>
+      <button id="myNameConfirmBtn" type="button">هذا جدولي</button>
+    `;
+    document.getElementById('myNameConfirmBtn').addEventListener('click', () => {
+      const val = document.getElementById('myNameInput').value.trim();
+      if(!val) return;
+      try{ localStorage.setItem(MY_NAME_KEY, val); }catch(e){}
+      renderMySchedule();
+    });
+    return;
+  }
+
+  const list = getEffectiveEmployees();
+  const me = list.find(e => e.name.trim() === myName.trim()) ||
+             list.find(e => e.name.includes(myName) || myName.includes(e.name));
+
+  if(!me){
+    widget.innerHTML = `
+      <span class="pill">تعذر إيجاد "<b>${myName}</b>" بالجدول.</span>
+      <button class="change-link" id="myNameResetBtn" type="button">تغيير الاسم</button>
+    `;
+  }else{
+    const row = document.querySelector(`table.schedule tbody tr[data-emp-row="${me.id}"]`);
+    if(row) row.classList.add('is-me');
+    const reminder = reminderText(computeNextOff(me.status));
+    widget.innerHTML = `
+      <span class="pill">أنتِ/أنت: <b>${me.name}</b></span>
+      <span class="reminder">${reminder}</span>
+      <button class="change-link" id="myNameResetBtn" type="button">تغيير</button>
+    `;
+  }
+  document.getElementById('myNameResetBtn').addEventListener('click', () => {
+    try{ localStorage.removeItem(MY_NAME_KEY); }catch(e){}
+    renderMySchedule();
+  });
+}
+
+/* ============================================================
+   FORM SUBMISSION (front-end only — wire to backend as needed)
+   ============================================================ */
+document.getElementById('scheduleForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const success = document.getElementById('formSuccess');
+  success.classList.add('show');
+  this.reset();
+  success.scrollIntoView({ behavior:'smooth', block:'nearest' });
+});
+
+/* ============================================================
+   STAR RATING (playful micro-interaction)
+   ============================================================ */
+document.getElementById('rating').addEventListener('click', function(e){
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  const val = Number(btn.dataset.v);
+  [...this.children].forEach((b, idx) => b.classList.toggle('on', idx < val));
+});
+
+/* ============================================================
+   REVEAL ON SCROLL (single subtle pass)
+   ============================================================ */
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      entry.target.classList.add('is-visible');
+      io.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
