@@ -432,9 +432,44 @@ table.amal-report tfoot td{ background:var(--primary-tint); font-weight:800; col
 .csat-low{ background:#FBE6E6; color:#A33; }
 
 /* ============================================================
+   CATEGORY NAV + BACK TO TOP
+   ============================================================ */
+.category-nav{
+  position:sticky; top:72px; z-index:45;
+  background:rgba(238,243,248,0.92); backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--border);
+  overflow-x:auto; white-space:nowrap; scrollbar-width:none;
+}
+#siteScope.dark-mode .category-nav{ background:rgba(15,25,34,0.92); }
+.category-nav::-webkit-scrollbar{ display:none; }
+.category-nav-inner{ display:inline-flex; gap:8px; padding:10px var(--sp-5); }
+.category-link{
+  display:inline-block; flex:none; padding:8px 16px; border-radius:var(--r-pill);
+  font-size:13px; font-weight:700; color:var(--text-secondary); background:var(--surface);
+  border:1px solid var(--border); text-decoration:none; transition:all .2s ease;
+}
+.category-link:hover{ color:var(--primary); border-color:var(--primary-light); }
+.category-link.active{ background:var(--primary); color:#fff; border-color:transparent; }
+
+section[id]{ scroll-margin-top: 132px; } /* clears the sticky header + category nav when jumping via an anchor link */
+
+.back-to-top{
+  position:fixed; bottom:24px; inset-inline-end:20px; z-index:120;
+  width:46px; height:46px; border-radius:50%; border:none; cursor:pointer;
+  background:var(--primary); color:#fff; font-size:18px;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:var(--shadow-3);
+  opacity:0; transform:translateY(12px); pointer-events:none;
+  transition:opacity .25s ease, transform .25s ease;
+}
+.back-to-top.show{ opacity:1; transform:translateY(0); pointer-events:auto; }
+.back-to-top:hover{ filter:brightness(1.1); }
+
+/* ============================================================
    HERO
    ============================================================ */
 .hero{ padding-top: var(--sp-6); }
+
 .hero-grid{
   display:grid; grid-template-columns: 1.15fr 0.85fr; gap:var(--sp-7);
   align-items:center;
@@ -717,11 +752,26 @@ tfoot.schedule-foot td{
 
 <div class="edit-mode-banner">وضع التعديل مفعّل — اضغط على أي نص لتعديله، أو اضغط على أي نقطة بجدول الدوام لتغيير حالتها</div>
 
+<nav class="category-nav" aria-label="أقسام الصفحة">
+  <div class="category-nav-inner">
+    <a class="category-link" href="#sec-hero">الرئيسية</a>
+    <a class="category-link" href="#sec-highlights">الأحداث</a>
+    <a class="category-link" href="#sec-spotlight">الموظف المميز</a>
+    <a class="category-link" href="#sec-notice">صلاة الجمعة</a>
+    <a class="category-link" href="#sec-form">اقتراح الجدول</a>
+    <a class="category-link" href="#sec-calendar">التقويم</a>
+    <a class="category-link" href="#sec-schedule">جدول الدوام</a>
+    <a class="category-link" href="#sec-report">تقرير الأداء</a>
+  </div>
+</nav>
+
+<button class="back-to-top" id="backToTopBtn" type="button" aria-label="الرجوع لأعلى الصفحة" title="أعلى الصفحة">↑</button>
+
 
 <main>
 
   <!-- HERO -->
-  <section class="hero container">
+  <section class="hero container" id="sec-hero">
     <div class="hero-grid">
       <div class="reveal">
         <div class="hero-eyebrow" data-m="أهلاً وسهلاً بالتيم الرهيب 💪" data-f="أهلاً وسهلاً بالتيم الرهيب 🌸">أهلاً وسهلاً بالتيم الرهيب</div>
@@ -755,7 +805,7 @@ tfoot.schedule-foot td{
   </section>
 
   <!-- HIGHLIGHTS -->
-  <section class="section container">
+  <section class="section container" id="sec-highlights">
     <div class="section-head reveal">
       <div>
         <h2 class="section-title">أبرز الأحداث</h2>
@@ -785,10 +835,10 @@ tfoot.schedule-foot td{
   </section>
 
   <!-- SPOTLIGHT + WISHES -->
-  <section class="section container">
+  <section class="section container" id="sec-spotlight">
     <div class="editorial-grid">
       <div class="spotlight card reveal">
-        <div class="spotlight-avatar">أ</div>
+        <div class="spotlight-avatar" id="spotlightAvatar">أ</div>
         <div class="spotlight-body">
           <div class="spotlight-kicker" data-edit-key="spot-kicker">موظفة الشهر — أغسطس</div>
           <h3 class="spotlight-name" data-edit-key="spot-name">أسماء</h3>
@@ -811,7 +861,7 @@ tfoot.schedule-foot td{
   </section>
 
   <!-- FRIDAY NOTICE -->
-  <section class="section container">
+  <section class="section container" id="sec-notice">
     <div class="notice reveal">
       <div class="notice-ico">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 8v5l3 2" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="1.8"/></svg>
@@ -824,7 +874,7 @@ tfoot.schedule-foot td{
   </section>
 
   <!-- SCHEDULE REQUEST FORM -->
-  <section class="section container">
+  <section class="section container" id="sec-form">
     <div class="section-head reveal">
       <div>
         <h2 class="section-title" data-m="تحب نرتب لك جدول الشهر حسب رغبتك؟" data-f="تحبين نرتب لك جدول الشهر حسب رغبتك؟">تحبّون نرتّب جدول الشهر حسب رغباتكم؟</h2>
@@ -856,7 +906,7 @@ tfoot.schedule-foot td{
   </section>
 
   <!-- CALENDAR -->
-  <section class="section container">
+  <section class="section container" id="sec-calendar">
     <div class="cal-card card reveal">
       <div class="cal-top">
         <h3 class="cal-title" id="calTitle">تقويم سبتمبر 2026</h3>
@@ -870,7 +920,7 @@ tfoot.schedule-foot td{
   </section>
 
   <!-- EMPLOYEE SCHEDULE -->
-  <section class="section container">
+  <section class="section container" id="sec-schedule">
     <div class="schedule-head reveal">
       <div>
         <h2 class="section-title" data-m="جدول دوام الموظفين" data-f="جدول دوام الموظفات">جدول دوام الموظفين</h2>
@@ -901,7 +951,7 @@ tfoot.schedule-foot td{
   </section>
 
   <!-- TEAM PERFORMANCE REPORT (public — visible to everyone) -->
-  <section class="section container">
+  <section class="section container" id="sec-report">
     <div class="section-head reveal">
       <div>
         <h2 class="section-title">تقرير الأداء</h2>
@@ -941,12 +991,12 @@ tfoot.schedule-foot td{
 <div class="modal-backdrop" id="amalPasswordModal">
   <div class="modal-card">
     <button class="modal-close" id="amalModalCloseBtn" aria-label="إغلاق">✕</button>
-    <h3 class="modal-title">🌌 دخول مساحة أمل</h3>
+    <h3 class="modal-title">🔫 إذا انت أمل... قولي ايش كلمة السر!</h3>
     <div class="field">
       <label for="amalPassword">كلمة المرور</label>
       <input id="amalPassword" type="password" placeholder="••••" inputmode="numeric">
     </div>
-    <div class="modal-error" id="amalPasswordError">كلمة المرور غير صحيحة</div>
+    <div class="modal-error" id="amalPasswordError">لا، انت مو أمل 😂 جرّبي مرة ثانية</div>
     <button class="panel-btn" id="amalPasswordSubmitBtn" style="background:var(--primary);color:#fff;border-color:transparent;">دخول</button>
   </div>
 </div>
@@ -1025,6 +1075,15 @@ tfoot.schedule-foot td{
           <input id="yearInput" type="number" value="2026" style="max-width:100px;">
           <button id="updateMonthBtn" type="button">تحديث</button>
         </div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-title">موظف/موظفة الشهر</div>
+        <div class="panel-mini-form">
+          <select id="spotlightEmpSelect" style="flex:2;"></select>
+          <button id="updateSpotlightBtn" type="button">تحديث</button>
+        </div>
+        <div class="panel-note" style="margin-top:8px;">تتغير صيغة "موظف/موظفة الشهر" والصورة الرمزية تلقائيًا حسب جنس المختار/ة. نص الإنجاز نفسه تقدرين تعدلينه بوضع التعديل بالنقر عليه مباشرة.</div>
       </div>
 
       <div class="panel-section">
@@ -1138,6 +1197,7 @@ function buildScheduleTable(){
   wireStatusCells();
   wireDeleteButtons();
   renderMySchedule();
+  populateSpotlightSelect();
 }
 buildScheduleTable();
 
@@ -1190,6 +1250,11 @@ const initYear = (savedSettings && savedSettings.year) ? savedSettings.year : 20
 applyMonthYear(initMonthIdx, initYear, { silent:true });
 document.getElementById('monthSelect').value = String(initMonthIdx);
 document.getElementById('yearInput').value = initYear;
+
+// restore saved employee-of-the-month spotlight, if one was set before
+if(savedSettings && savedSettings.spotlightEmpId !== undefined){
+  applySpotlight(savedSettings.spotlightEmpId, { silent:true });
+}
 
 /* ============================================================
    BOYS / GIRLS / AMAL VIEW TOGGLE + TEXT & SCHEDULE OVERRIDES
@@ -1593,6 +1658,43 @@ document.getElementById('updateMonthBtn').addEventListener('click', () => {
 });
 
 /* ============================================================
+   EMPLOYEE / EMPLOYEE-OF-THE-MONTH SPOTLIGHT
+   ============================================================ */
+function populateSpotlightSelect(){
+  const sel = document.getElementById('spotlightEmpSelect');
+  const current = sel.value;
+  sel.innerHTML = getEffectiveEmployees().map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+  if(current && sel.querySelector(`option[value="${current}"]`)) sel.value = current;
+}
+
+function applySpotlight(empId, opts){
+  const silent = opts && opts.silent;
+  const emp = getEffectiveEmployees().find(e => String(e.id) === String(empId));
+  if(!emp) return;
+
+  const monthName = document.querySelector('[data-edit-key="hero-month"]').textContent;
+  const roleWord = emp.gender === 'f' ? 'موظفة' : 'موظف';
+  const kickerText = `${roleWord} الشهر — ${monthName}`;
+
+  const ov = getOverrides();
+  ov.text['spot-kicker'] = kickerText;
+  ov.text['spot-name'] = emp.name;
+  ov.settings.spotlightEmpId = emp.id;
+  saveOverrides(ov);
+
+  document.querySelector('[data-edit-key="spot-kicker"]').textContent = kickerText;
+  document.querySelector('[data-edit-key="spot-name"]').textContent = emp.name;
+  document.getElementById('spotlightAvatar').textContent = emp.name.trim().charAt(0);
+  document.getElementById('spotlightEmpSelect').value = emp.id;
+
+  if(!silent) logEdit(`تحديث ${roleWord} الشهر إلى: ${emp.name}`);
+}
+
+document.getElementById('updateSpotlightBtn').addEventListener('click', () => {
+  applySpotlight(document.getElementById('spotlightEmpSelect').value);
+});
+
+/* ============================================================
    ADD EMPLOYEE
    ============================================================ */
 document.getElementById('addEmpBtn').addEventListener('click', () => {
@@ -1736,6 +1838,32 @@ const io = new IntersectionObserver((entries) => {
   });
 }, { threshold: 0.12 });
 document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+/* ============================================================
+   BACK TO TOP + CATEGORY NAV SCROLL-SPY
+   ============================================================ */
+const backToTopBtn = document.getElementById('backToTopBtn');
+window.addEventListener('scroll', () => {
+  backToTopBtn.classList.toggle('show', window.scrollY > 400);
+}, { passive:true });
+backToTopBtn.addEventListener('click', () => {
+  window.scrollTo({ top:0, behavior:'smooth' });
+});
+
+const categoryLinks = document.querySelectorAll('.category-link');
+const navSections = document.querySelectorAll('section[id]');
+const navSpy = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      const id = entry.target.getAttribute('id');
+      categoryLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { rootMargin: '-140px 0px -60% 0px', threshold: 0 });
+navSections.forEach(sec => navSpy.observe(sec));
+
 </script>
 </body>
 </html>
