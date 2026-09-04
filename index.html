@@ -269,6 +269,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .panel-btn:hover{ background:var(--primary-tint); }
 .panel-note{ font-size:12px; color:var(--text-muted); margin-top:var(--sp-4); line-height:1.6; }
 
+.panel-warning{
+  background:var(--sand-tint); color:#7a5d29; border-radius:var(--r-sm);
+  padding:12px 14px; font-size:12.5px; line-height:1.7; font-weight:600;
+}
+
 .panel-section{ margin-top:var(--sp-5); padding-top:var(--sp-5); border-top:1px solid var(--border); }
 .panel-section-title{ font-size:14px; font-weight:800; color:var(--primary-dark); margin:0 0 var(--sp-3); }
 .panel-mini-form{ display:flex; gap:8px; flex-wrap:wrap; }
@@ -280,18 +285,20 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   border:none; background:var(--primary); color:#fff; font-weight:700; font-size:13px;
   padding:9px 16px; border-radius:var(--r-sm); cursor:pointer; white-space:nowrap;
 }
-.log-list{ list-style:none; margin:0; padding:0; max-height:160px; overflow-y:auto; }
-.log-list li{ font-size:12.5px; color:var(--text-secondary); padding:7px 0; border-bottom:1px dashed var(--border); }
-.log-list li:last-child{ border-bottom:none; }
-.log-list time{ display:block; color:var(--text-muted); font-size:11px; }
-.log-empty{ font-size:12.5px; color:var(--text-muted); }
 
-/* delete-employee affordance, visible only in edit mode */
-.emp-delete-btn{
-  display:none; border:none; background:var(--rose-tint); color:var(--rose); width:20px; height:20px;
-  border-radius:50%; font-size:12px; line-height:1; cursor:pointer; margin-inline-start:8px; vertical-align:middle;
+.quick-chip-row{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:var(--sp-3); }
+.quick-chip{
+  border:1px solid var(--border-strong); background:var(--surface-2); color:var(--text-secondary);
+  font-size:12px; font-weight:600; padding:6px 12px; border-radius:var(--r-pill); cursor:pointer;
 }
-body.edit-mode .emp-delete-btn{ display:inline-flex; align-items:center; justify-content:center; }
+.quick-chip:hover{ background:var(--primary-tint); color:var(--primary-dark); border-color:var(--primary-light); }
+#changeRequestBox{
+  width:100%; border:1.5px solid var(--border-strong); border-radius:var(--r-sm);
+  padding:10px 12px; font-size:13.5px; font-family:inherit; color:var(--text-primary);
+  background:var(--surface-2); resize:vertical;
+}
+#changeRequestBox:focus{ outline:none; border-color:var(--primary); background:var(--surface); }
+
 
 /* ============================================================
    MY SCHEDULE (personal identification widget)
@@ -334,21 +341,6 @@ table.schedule tr.is-me td{ background:var(--primary-tint) !important; }
 }
 .quote-banner .q-ico{ font-size:18px; flex:none; }
 .quote-banner p{ margin:0; font-size:13.5px; color:var(--text-secondary); font-style:normal; }
-
-/* edit-mode affordances */
-body.edit-mode [data-edit-key], body.edit-mode .emp-name-text{
-  outline:1.5px dashed var(--primary-light); outline-offset:3px; border-radius:4px; cursor:text;
-}
-body.edit-mode [data-edit-key]:focus, body.edit-mode .emp-name-text:focus{
-  outline:1.5px solid var(--primary); background:var(--primary-tint);
-}
-body.edit-mode .status-cell{ cursor:pointer; }
-body.edit-mode .status-cell:hover .dot{ transform:scale(1.2); }
-.edit-mode-banner{
-  display:none; position:sticky; top:72px; z-index:40; background:var(--primary-dark); color:#fff;
-  text-align:center; font-size:13px; font-weight:700; padding:8px;
-}
-body.edit-mode .edit-mode-banner{ display:block; }
 
 /* ============================================================
    AMAL DASHBOARD — password-gated personal page for the manager.
@@ -750,8 +742,6 @@ tfoot.schedule-foot td{
   </div>
 </div>
 
-<div class="edit-mode-banner">وضع التعديل مفعّل — اضغط على أي نص لتعديله، أو اضغط على أي نقطة بجدول الدوام لتغيير حالتها</div>
-
 <nav class="category-nav" aria-label="أقسام الصفحة">
   <div class="category-nav-inner">
     <a class="category-link" href="#sec-hero">الرئيسية</a>
@@ -1049,64 +1039,26 @@ tfoot.schedule-foot td{
     <div id="controlPanel" style="display:none;">
       <h3 class="modal-title">لوحة التحكم</h3>
 
-      <div class="panel-row">
-        <div>
-          <b>وضع التعديل</b>
-          <small>فعّليه لتعديل أي نص أو حالة بالجدول مباشرة</small>
+      <div class="panel-warning">
+        ⚠️ أي تغيير تبين إن جميع الموظفين يشوفونه، اكتبي طلبك بالأسفل وأرسليه — بيتم تحديثه وتفعيله خلال وقت قصير.
+      </div>
+
+      <div class="panel-section" style="margin-top:var(--sp-4); padding-top:0; border-top:none;">
+        <div class="panel-section-title">✏️ اطلبي تعديل</div>
+        <div class="quick-chip-row">
+          <button class="quick-chip" type="button" data-tpl="غيّري موظف/موظفة الشهر إلى: ">موظف الشهر</button>
+          <button class="quick-chip" type="button" data-tpl="غيّري الشهر إلى: ">الشهر</button>
+          <button class="quick-chip" type="button" data-tpl="أضيفي موظف جديد بالاسم: ">إضافة موظف</button>
+          <button class="quick-chip" type="button" data-tpl="احذفي الموظف: ">حذف موظف</button>
+          <button class="quick-chip" type="button" data-tpl="عدّلي حالة يوم معين لموظف: ">تعديل الجدول</button>
+          <button class="quick-chip" type="button" data-tpl="عدّلي هذا النص: ">تعديل نص</button>
         </div>
-        <label class="switch">
-          <input type="checkbox" id="editModeToggle">
-          <span></span>
-        </label>
+        <textarea id="changeRequestBox" rows="4" placeholder="مثال: غيّري موظف الشهر إلى فارس، وغيّري الشهر إلى أكتوبر 2026"></textarea>
+        <button class="panel-btn" id="copyRequestBtn" style="background:var(--primary); color:#fff; border-color:transparent;">📋 نسخ الطلب لإرساله</button>
+        <div class="panel-note" id="copyRequestNote" style="display:none;">✅ تم نسخ طلبك — الصقيه وأرسليه.</div>
       </div>
 
-      <button class="panel-btn danger" id="resetEditsBtn">إعادة تعيين كل التعديلات</button>
-      <button class="panel-btn" id="logoutBtn">تسجيل الخروج من الإعدادات</button>
-
-      <div class="panel-section">
-        <div class="panel-section-title">الشهر والسنة</div>
-        <div class="panel-mini-form">
-          <select id="monthSelect">
-            <option value="0">يناير</option><option value="1">فبراير</option><option value="2">مارس</option>
-            <option value="3">أبريل</option><option value="4">مايو</option><option value="5">يونيو</option>
-            <option value="6">يوليو</option><option value="7">أغسطس</option><option value="8" selected>سبتمبر</option>
-            <option value="9">أكتوبر</option><option value="10">نوفمبر</option><option value="11">ديسمبر</option>
-          </select>
-          <input id="yearInput" type="number" value="2026" style="max-width:100px;">
-          <button id="updateMonthBtn" type="button">تحديث</button>
-        </div>
-      </div>
-
-      <div class="panel-section">
-        <div class="panel-section-title">موظف/موظفة الشهر</div>
-        <div class="panel-mini-form">
-          <select id="spotlightEmpSelect" style="flex:2;"></select>
-          <button id="updateSpotlightBtn" type="button">تحديث</button>
-        </div>
-        <div class="panel-note" style="margin-top:8px;">تتغير صيغة "موظف/موظفة الشهر" والصورة الرمزية تلقائيًا حسب جنس المختار/ة. نص الإنجاز نفسه تقدرين تعدلينه بوضع التعديل بالنقر عليه مباشرة.</div>
-      </div>
-
-      <div class="panel-section">
-        <div class="panel-section-title">إضافة موظف</div>
-        <div class="panel-mini-form">
-          <input id="newEmpName" type="text" placeholder="اسم الموظف">
-          <select id="newEmpGender">
-            <option value="m">ذكر</option>
-            <option value="f">أنثى</option>
-          </select>
-          <button id="addEmpBtn" type="button">إضافة</button>
-        </div>
-        <div class="panel-note" style="margin-top:8px;">لحذف موظف: فعّلي وضع التعديل، وبيظهر زر ✕ صغير بجانب اسمه بالجدول.</div>
-      </div>
-
-      <div class="panel-section">
-        <div class="panel-section-title">سجل التعديلات</div>
-        <ul class="log-list" id="editLogList"></ul>
-      </div>
-
-      <div class="panel-note">
-        ملاحظة: هذا الموقع ملف واحد بدون قاعدة بيانات، فالتعديلات تُحفظ داخل هذا المتصفح فقط ولن تظهر تلقائيًا عند باقي الموظفين — إذا تبين نشرها للجميع، لازم تحديث الملف نفسه وإرساله من جديد.
-      </div>
+      <button class="panel-btn" id="logoutBtn" style="margin-top:var(--sp-5);">تسجيل الخروج من الإعدادات</button>
     </div>
   </div>
 </div>
@@ -1120,7 +1072,6 @@ const WEEKEND_INDEXES = [5,6]; // الجمعة والسبت
 const GENDER_KEY = 'amal-portal-gender';
 const OVERRIDES_KEY = 'amal-portal-overrides';
 const ADMIN_KEY = 'amal-portal-admin';
-const LOG_KEY = 'amal-portal-log';
 const MONTH_NAMES = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
 
 const EMPLOYEES = [
@@ -1178,7 +1129,7 @@ function buildScheduleTable(){
   let bodyHTML = '';
   list.forEach((emp, i) => {
     const genderDot = `<span class="emp-gender-dot ${emp.gender === 'f' ? 'g-f' : 'g-m'}"></span>`;
-    bodyHTML += `<tr data-emp-row="${emp.id}"><td class="emp-name"><span class="emp-name-text" data-emp-id="${emp.id}">${emp.name}</span>${genderDot}<button class="emp-delete-btn" data-emp-id="${emp.id}" title="حذف الموظف">✕</button></td><td class="emp-id">${i+1}</td>`;
+    bodyHTML += `<tr data-emp-row="${emp.id}"><td class="emp-name">${emp.name}${genderDot}</td><td class="emp-id">${i+1}</td>`;
     emp.status.forEach((s, dayIdx) => {
       bodyHTML += `<td><div class="status-cell" data-emp-id="${emp.id}" data-day="${dayIdx}">${dotFor(s)}</div></td>`;
     });
@@ -1193,30 +1144,10 @@ function buildScheduleTable(){
   });
   footRow.innerHTML = footHTML;
 
-  wireEditableNames();
-  wireStatusCells();
-  wireDeleteButtons();
   renderMySchedule();
-  populateSpotlightSelect();
 }
 buildScheduleTable();
 
-function wireDeleteButtons(){
-  document.querySelectorAll('.emp-delete-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if(!document.body.classList.contains('edit-mode')) return;
-      const id = btn.dataset.empId;
-      const list = getEffectiveEmployees();
-      const emp = list.find(e => String(e.id) === String(id));
-      if(!confirm(`حذف ${emp ? emp.name : 'هذا الموظف'} من الجدول؟`)) return;
-      const ov = getOverrides();
-      ov.removed.push(isNaN(id) ? id : Number(id));
-      saveOverrides(ov);
-      logEdit(`تم حذف الموظف: ${emp ? emp.name : id}`);
-      buildScheduleTable();
-    });
-  });
-}
 
 
 
@@ -1243,18 +1174,10 @@ function buildCalendar(year, month){ // month: 0-indexed
   }
   grid.innerHTML = html;
 }
-// restore saved month/year (if the admin changed it before), else default to September 2026
-const savedSettings = getOverrides().settings;
-const initMonthIdx = (savedSettings && savedSettings.monthIdx !== undefined) ? savedSettings.monthIdx : 8;
-const initYear = (savedSettings && savedSettings.year) ? savedSettings.year : 2026;
-applyMonthYear(initMonthIdx, initYear, { silent:true });
-document.getElementById('monthSelect').value = String(initMonthIdx);
-document.getElementById('yearInput').value = initYear;
-
-// restore saved employee-of-the-month spotlight, if one was set before
-if(savedSettings && savedSettings.spotlightEmpId !== undefined){
-  applySpotlight(savedSettings.spotlightEmpId, { silent:true });
-}
+// current month/year for the whole site — update these two values directly
+// in the code each month (the admin panel no longer exposes this, since a
+// change made there could only ever show on Amal's own device)
+applyMonthYear(8, 2026); // 8 = September (0-indexed), 2026
 
 /* ============================================================
    BOYS / GIRLS / AMAL VIEW TOGGLE + TEXT & SCHEDULE OVERRIDES
@@ -1496,7 +1419,6 @@ const passwordGate = document.getElementById('passwordGate');
 const controlPanel = document.getElementById('controlPanel');
 const passwordInput = document.getElementById('settingsPassword');
 const passwordError = document.getElementById('passwordError');
-const editModeToggle = document.getElementById('editModeToggle');
 
 function isAdmin(){
   try{ return localStorage.getItem(ADMIN_KEY) === 'true'; }catch(e){ return false; }
@@ -1504,7 +1426,6 @@ function isAdmin(){
 function showControlPanel(){
   passwordGate.style.display = 'none';
   controlPanel.style.display = 'block';
-  renderLog();
 }
 function openModal(){
   modal.classList.add('show');
@@ -1534,96 +1455,42 @@ passwordInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') documen
 
 document.getElementById('logoutBtn').addEventListener('click', () => {
   try{ localStorage.removeItem(ADMIN_KEY); }catch(e){}
-  setEditMode(false);
-  editModeToggle.checked = false;
   closeModal();
 });
 
-document.getElementById('resetEditsBtn').addEventListener('click', () => {
-  if(!confirm('هذا يمسح كل التعديلات المحفوظة بهذا المتصفح. متأكد؟')) return;
-  try{ localStorage.removeItem(OVERRIDES_KEY); }catch(e){}
-  location.reload();
-});
-
-function setEditMode(on){
-  document.body.classList.toggle('edit-mode', on);
-  document.querySelectorAll('[data-edit-key]').forEach(el => { el.contentEditable = on; });
-  document.querySelectorAll('.emp-name-text').forEach(el => { el.contentEditable = on; });
-}
-
-editModeToggle.addEventListener('change', () => setEditMode(editModeToggle.checked));
-
-// save a text edit when the admin clicks away from an editable element
-document.addEventListener('focusout', (e) => {
-  if(!document.body.classList.contains('edit-mode')) return;
-  const el = e.target;
-  if(el.dataset && el.dataset.editKey){
-    const ov = getOverrides();
-    ov.text[el.dataset.editKey] = el.textContent;
-    saveOverrides(ov);
-    logEdit(`تعديل نص: ${el.dataset.editKey}`);
-  }
-});
-
-function wireEditableNames(){
-  document.querySelectorAll('.emp-name-text').forEach(el => {
-    el.contentEditable = document.body.classList.contains('edit-mode');
-    el.addEventListener('focusout', () => {
-      if(!document.body.classList.contains('edit-mode')) return;
-      const id = el.dataset.empId;
-      const ov = getOverrides();
-      ov.employees[id] = ov.employees[id] || {};
-      ov.employees[id].name = el.textContent.trim();
-      saveOverrides(ov);
-      logEdit(`تغيير اسم موظف إلى: ${el.textContent.trim()}`);
-    });
-  });
-}
-
-function wireStatusCells(){
-  const cycle = { work:'off', off:'special', special:'work' };
-  document.querySelectorAll('.status-cell').forEach(cell => {
-    cell.addEventListener('click', () => {
-      if(!document.body.classList.contains('edit-mode')) return;
-      const id = cell.dataset.empId;
-      const day = cell.dataset.day;
-      const dotEl = cell.querySelector('.dot');
-      const current = dotEl.classList.contains('work') ? 'work' : dotEl.classList.contains('special') ? 'special' : 'off';
-      const next = cycle[current];
-      dotEl.className = 'dot ' + next;
-      const ov = getOverrides();
-      ov.employees[id] = ov.employees[id] || {};
-      ov.employees[id].status = ov.employees[id].status || {};
-      ov.employees[id].status[day] = next;
-      saveOverrides(ov);
-      logEdit(`تغيير حالة يوم ${DAYS[day]} إلى ${next === 'work' ? 'دوام' : next === 'off' ? 'أوف' : 'إجازة خاصة'}`);
-      buildScheduleTable(); // refresh totals row
-    });
-  });
-}
-
 /* ============================================================
-   EDIT LOG
+   REQUEST A CHANGE — replaces the old local-only live-editing
+   tools. Real, site-wide changes always go through the developer
+   editing the actual code, so this just helps Amal phrase and
+   copy a clear request instead of pretending to edit live.
    ============================================================ */
-function logEdit(action){
-  let log = [];
-  try{ log = JSON.parse(localStorage.getItem(LOG_KEY)) || []; }catch(e){}
-  log.unshift({ time: new Date().toLocaleString('ar-EG', { dateStyle:'medium', timeStyle:'short' }), action });
-  log = log.slice(0, 30);
-  try{ localStorage.setItem(LOG_KEY, JSON.stringify(log)); }catch(e){}
-  renderLog();
-}
-function renderLog(){
-  const list = document.getElementById('editLogList');
-  if(!list) return;
-  let log = [];
-  try{ log = JSON.parse(localStorage.getItem(LOG_KEY)) || []; }catch(e){}
-  if(!log.length){ list.innerHTML = '<li class="log-empty">ما فيه تعديلات مسجلة بعد.</li>'; return; }
-  list.innerHTML = log.map(entry => `<li><time>${entry.time}</time>${entry.action}</li>`).join('');
-}
+document.querySelectorAll('.quick-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const box = document.getElementById('changeRequestBox');
+    const line = chip.dataset.tpl;
+    box.value = box.value ? (box.value.replace(/\n+$/,'') + '\n' + line) : line;
+    box.focus();
+    box.setSelectionRange(box.value.length, box.value.length);
+  });
+});
+
+document.getElementById('copyRequestBtn').addEventListener('click', () => {
+  const box = document.getElementById('changeRequestBox');
+  const text = box.value.trim();
+  if(!text) { box.focus(); return; }
+  const dated = `طلب تعديل بوابة فريق أمل (${new Date().toLocaleDateString('ar-EG')}):\n${text}`;
+  navigator.clipboard.writeText(dated).then(() => {
+    const note = document.getElementById('copyRequestNote');
+    note.style.display = 'block';
+    setTimeout(() => { note.style.display = 'none'; }, 2500);
+  }).catch(() => alert(dated));
+});
 
 /* ============================================================
-   MONTH / YEAR CONTROL
+   MONTH / YEAR — set internally by the developer when updating
+   the schedule each month (see the call further below); no admin
+   UI for this anymore since it can only ever apply on Amal's own
+   device, not for the whole team.
    ============================================================ */
 function applyMonthYear(monthIdx, year, opts){
   const silent = opts && opts.silent;
@@ -1648,68 +1515,20 @@ function applyMonthYear(monthIdx, year, opts){
   sub.textContent = document.body.classList.contains('theme-girls') ? sub.dataset.f : sub.dataset.m;
 
   buildCalendar(year, monthIdx);
-  if(!silent) logEdit(`تغيير الشهر إلى ${monthName} ${year}`);
 }
-
-document.getElementById('updateMonthBtn').addEventListener('click', () => {
-  const monthIdx = Number(document.getElementById('monthSelect').value);
-  const year = Number(document.getElementById('yearInput').value) || 2026;
-  applyMonthYear(monthIdx, year);
-});
 
 /* ============================================================
-   EMPLOYEE / EMPLOYEE-OF-THE-MONTH SPOTLIGHT
+   EMPLOYEE OF THE MONTH — set directly in the code (developer
+   updates this each month per Amal's request); no admin UI for
+   it anymore since a change there would only show on her device.
    ============================================================ */
-function populateSpotlightSelect(){
-  const sel = document.getElementById('spotlightEmpSelect');
-  const current = sel.value;
-  sel.innerHTML = getEffectiveEmployees().map(e => `<option value="${e.id}">${e.name}</option>`).join('');
-  if(current && sel.querySelector(`option[value="${current}"]`)) sel.value = current;
+function setSpotlight(name, gender, monthName){
+  const roleWord = gender === 'f' ? 'موظفة' : 'موظف';
+  document.querySelector('[data-edit-key="spot-kicker"]').textContent = `${roleWord} الشهر — ${monthName}`;
+  document.querySelector('[data-edit-key="spot-name"]').textContent = name;
+  document.getElementById('spotlightAvatar').textContent = name.trim().charAt(0);
 }
-
-function applySpotlight(empId, opts){
-  const silent = opts && opts.silent;
-  const emp = getEffectiveEmployees().find(e => String(e.id) === String(empId));
-  if(!emp) return;
-
-  const monthName = document.querySelector('[data-edit-key="hero-month"]').textContent;
-  const roleWord = emp.gender === 'f' ? 'موظفة' : 'موظف';
-  const kickerText = `${roleWord} الشهر — ${monthName}`;
-
-  const ov = getOverrides();
-  ov.text['spot-kicker'] = kickerText;
-  ov.text['spot-name'] = emp.name;
-  ov.settings.spotlightEmpId = emp.id;
-  saveOverrides(ov);
-
-  document.querySelector('[data-edit-key="spot-kicker"]').textContent = kickerText;
-  document.querySelector('[data-edit-key="spot-name"]').textContent = emp.name;
-  document.getElementById('spotlightAvatar').textContent = emp.name.trim().charAt(0);
-  document.getElementById('spotlightEmpSelect').value = emp.id;
-
-  if(!silent) logEdit(`تحديث ${roleWord} الشهر إلى: ${emp.name}`);
-}
-
-document.getElementById('updateSpotlightBtn').addEventListener('click', () => {
-  applySpotlight(document.getElementById('spotlightEmpSelect').value);
-});
-
-/* ============================================================
-   ADD EMPLOYEE
-   ============================================================ */
-document.getElementById('addEmpBtn').addEventListener('click', () => {
-  const nameInput = document.getElementById('newEmpName');
-  const name = nameInput.value.trim();
-  if(!name){ nameInput.focus(); return; }
-  const gender = document.getElementById('newEmpGender').value;
-  const id = 'custom-' + Date.now();
-  const ov = getOverrides();
-  ov.added.push({ id, name, gender, status:["work","work","work","work","work","off","off"] });
-  saveOverrides(ov);
-  logEdit(`تمت إضافة موظف جديد: ${name}`);
-  nameInput.value = '';
-  buildScheduleTable();
-});
+setSpotlight('أسماء', 'f', 'يونيو'); // change the name / gender ('m','f') / month text here whenever it changes
 
 /* ============================================================
    DAILY QUOTE
