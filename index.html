@@ -299,6 +299,18 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 }
 #changeRequestBox:focus{ outline:none; border-color:var(--primary); background:var(--surface); }
 
+.mini-textarea{
+  width:100%; border:1.5px solid var(--border-strong); border-radius:var(--r-sm);
+  padding:9px 10px; font-size:13px; font-family:inherit; color:var(--text-primary);
+  background:var(--surface-2); resize:vertical;
+}
+.mini-textarea:focus{ outline:none; border-color:var(--primary); background:var(--surface); }
+.code-output{
+  width:100%; margin-top:var(--sp-3); border:1.5px dashed var(--border-strong); border-radius:var(--r-sm);
+  padding:10px; font-family:'Courier New', monospace; font-size:11.5px; direction:ltr; text-align:left;
+  color:var(--text-secondary); background:var(--surface-2); resize:vertical;
+}
+
 
 /* ============================================================
    MY SCHEDULE (personal identification widget)
@@ -422,6 +434,60 @@ table.amal-report tfoot td{ background:var(--primary-tint); font-weight:800; col
 .csat-high{ background:#E1F3E7; color:#1E6B3E; }
 .csat-mid{ background:#FDF1DC; color:#8A6A1F; }
 .csat-low{ background:#FBE6E6; color:#A33; }
+
+/* ============================================================
+   PUBLIC REPORT DASHBOARD (Top 3 + KPIs + trend)
+   ============================================================ */
+.trend-pill{
+  display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:var(--r-pill);
+  font-size:13px; font-weight:700; white-space:nowrap;
+}
+.trend-pill.up{ background:#E1F3E7; color:#1E6B3E; }
+.trend-pill.down{ background:#FBE6E6; color:#A33; }
+.trend-pill.flat{ background:var(--surface-2); color:var(--text-secondary); }
+
+.kpi-grid{
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(130px,1fr)); gap:var(--sp-4);
+  margin:var(--sp-5) 0;
+}
+.kpi-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md);
+  padding:var(--sp-4); text-align:center; box-shadow:var(--shadow-1);
+}
+.kpi-card span{ display:block; font-size:12px; color:var(--text-muted); margin-bottom:6px; }
+.kpi-card b{ font-size:21px; color:var(--primary-dark); font-weight:800; }
+
+.podium{
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:var(--sp-3); align-items:end;
+  margin-bottom:var(--sp-6);
+}
+.podium-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md);
+  text-align:center; padding:var(--sp-4) var(--sp-2) var(--sp-3); box-shadow:var(--shadow-1);
+  position:relative;
+}
+.podium-card.rank-1{ order:2; padding-top:var(--sp-5); box-shadow:var(--shadow-2); border-color:#E8C468; }
+.podium-card.rank-2{ order:1; }
+.podium-card.rank-3{ order:3; }
+.podium-medal{ font-size:28px; margin-bottom:6px; }
+.podium-card.rank-1 .podium-medal{ font-size:36px; }
+.podium-name{ font-size:13px; font-weight:700; color:var(--text-primary); margin-bottom:4px; line-height:1.4; }
+.podium-score{ font-size:18px; font-weight:800; color:var(--primary); }
+.podium-card.rank-1 .podium-score{ font-size:24px; }
+
+.csat-bar-wrap{ display:flex; align-items:center; gap:8px; justify-content:center; }
+.csat-bar-track{ width:56px; height:6px; border-radius:4px; background:var(--border); overflow:hidden; flex:none; }
+.csat-bar-fill{ height:100%; border-radius:4px; }
+
+.wish-response-card{
+  border:1px solid var(--border); border-radius:var(--r-md); padding:var(--sp-3) var(--sp-4);
+  margin-bottom:var(--sp-3); background:var(--surface-2);
+}
+.wish-response-card b{ color:var(--primary-dark); font-size:14px; }
+.wish-response-card .wr-time{ color:var(--text-muted); font-size:11px; float:left; }
+.wish-response-card p{ margin:6px 0 0; font-size:13px; color:var(--text-secondary); }
+.wish-response-card p span{ display:block; margin-top:2px; }
+
 
 /* ============================================================
    CATEGORY NAV + BACK TO TOP
@@ -705,6 +771,7 @@ tfoot.schedule-foot td{
 .footer-note{ color:var(--text-muted); font-size:13px; }
 
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -947,11 +1014,15 @@ tfoot.schedule-foot td{
         <h2 class="section-title">تقرير الأداء</h2>
         <div class="section-sub" data-edit-key="report-daterange">الفترة: من 1 إلى 5 سبتمبر 2026</div>
       </div>
+      <div class="trend-pill reveal" id="reportTrendPill"></div>
     </div>
 
-    <div class="amal-highlight top reveal" id="publicTopHighlight" style="margin-bottom:var(--sp-5);"></div>
+    <div class="kpi-grid reveal" id="reportKpiGrid"></div>
+
+    <div class="podium reveal" id="reportPodium"></div>
 
     <div class="amal-report-card card reveal">
+      <h3 style="margin:0 0 var(--sp-4); font-size:15px; color:var(--primary-dark);">كل الأرقام بالتفصيل</h3>
       <div style="overflow-x:auto;">
         <table class="amal-report">
           <thead><tr id="publicReportHead"></tr></thead>
@@ -972,7 +1043,7 @@ tfoot.schedule-foot td{
     <button data-v="4">★</button>
     <button data-v="5">★</button>
   </div>
-  <div class="footer-note" data-edit-key="footer-note">بوابة فريق أمل الداخلية · تصميم مطوّر بروح الهوية الأصلية · © 2026</div>
+  <div class="footer-note" data-edit-key="footer-note">بوابة فريق أمل الداخلية — تصميم مطوّر صُنع بشغف بواسطة فارس الأحمدي</div>
 </footer>
 
 </div><!-- /#siteScope — dark mode is scoped to everything above; the modals and Amal's dashboard below stay outside it so they're always light -->
@@ -1008,7 +1079,7 @@ tfoot.schedule-foot td{
     <div class="amal-stats-grid" id="amalStatsGrid"></div>
     <div class="amal-highlight-row" id="amalHighlightRow"></div>
 
-    <div class="amal-report-card">
+    <div class="amal-report-card" style="margin-bottom:var(--sp-5);">
       <h3>تقرير أداء الفريق — من 1 إلى 5 سبتمبر 2026</h3>
       <div style="overflow-x:auto;">
         <table class="amal-report">
@@ -1017,6 +1088,15 @@ tfoot.schedule-foot td{
           <tfoot><tr id="amalReportFoot"></tr></tfoot>
         </table>
       </div>
+    </div>
+
+    <div class="amal-report-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--sp-4);">
+        <h3 style="margin:0;">💌 ردود استبيان رغبات الشهر القادم</h3>
+        <button class="quick-chip" id="refreshWishesBtn" type="button">🔄 تحديث</button>
+      </div>
+      <div id="wishesResponsesNote" class="panel-note" style="margin-top:0;"></div>
+      <div id="wishesResponsesList"></div>
     </div>
   </div>
 </div>
@@ -1040,7 +1120,7 @@ tfoot.schedule-foot td{
       <h3 class="modal-title">لوحة التحكم</h3>
 
       <div class="panel-warning">
-        ⚠️ أي تغيير تبين إن جميع الموظفين يشوفونه، اكتبي طلبك بالأسفل وأرسليه — بيتم تحديثه وتفعيله خلال وقت قصير.
+        💾 موظف الشهر، أبرز الأحداث، وأمنيات الشهر: تعديلاتها تُحفظ وتظهر مباشرة عند الجميع. أما تغييرات الجدول أو التقرير، اكتبي طلبك بالأسفل وأرسليه.
       </div>
 
       <div class="panel-section" style="margin-top:var(--sp-4); padding-top:0; border-top:none;">
@@ -1058,12 +1138,127 @@ tfoot.schedule-foot td{
         <div class="panel-note" id="copyRequestNote" style="display:none;">✅ تم نسخ طلبك — الصقيه وأرسليه.</div>
       </div>
 
+      <div class="panel-section">
+        <div class="panel-section-title">📊 لصق تقرير جديد من إكسل</div>
+        <div class="panel-note" style="margin-top:0;">انسخي جدول التقرير كامل من إكسل (بصف العناوين) والصقيه هنا — تنعكس المعاينة فورًا:</div>
+        <textarea id="reportPasteBox" rows="4" placeholder="الصقي هنا (Ctrl+V)"></textarea>
+        <button class="panel-btn" id="reportParseBtn" style="background:var(--primary); color:#fff; border-color:transparent;">🔄 تحديث ومعاينة التقرير</button>
+        <div class="panel-note" id="reportParseNote"></div>
+        <textarea class="code-output" id="reportCodeOutput" rows="6" readonly style="display:none;"></textarea>
+        <button class="panel-btn" id="copyReportCodeBtn" style="display:none;">📋 نسخ الكود لإرساله</button>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-title">📅 لصق جدول شهري جديد من إكسل</div>
+        <div class="panel-note" style="margin-top:0;">انسخي جدول الدوام الأسبوعي/الشهري كامل من إكسل (بصف العناوين) والصقيه هنا:</div>
+        <textarea id="schedulePasteBox" rows="4" placeholder="الصقي هنا (Ctrl+V)"></textarea>
+        <button class="panel-btn" id="scheduleParseBtn" style="background:var(--primary); color:#fff; border-color:transparent;">🔄 تحديث ومعاينة الجدول</button>
+        <div class="panel-note" id="scheduleParseNote"></div>
+        <textarea class="code-output" id="scheduleCodeOutput" rows="8" readonly style="display:none;"></textarea>
+        <button class="panel-btn" id="copyScheduleCodeBtn" style="display:none;">📋 نسخ الكود لإرساله</button>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-title">⭐ موظف/موظفة الشهر</div>
+        <div class="panel-mini-form">
+          <input id="spotNameInput" type="text" placeholder="الاسم">
+          <select id="spotGenderInput">
+            <option value="f">أنثى</option>
+            <option value="m">ذكر</option>
+          </select>
+          <input id="spotMonthInput" type="text" placeholder="الشهر" style="max-width:90px;">
+        </div>
+        <button class="panel-btn" id="spotPreviewBtn" style="background:var(--primary); color:#fff; border-color:transparent;">💾 حفظ للجميع</button>
+        <div class="panel-note" id="spotSaveNote" style="display:none;"></div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-title">📰 أبرز الأحداث</div>
+        <input id="hl1TitleInput" type="text" placeholder="عنوان الحدث الأول" style="width:100%; margin-bottom:6px;">
+        <textarea id="hl1BodyInput" rows="2" placeholder="نص الحدث الأول" class="mini-textarea"></textarea>
+        <input id="hl2TitleInput" type="text" placeholder="عنوان الحدث الثاني" style="width:100%; margin:8px 0 6px;">
+        <textarea id="hl2BodyInput" rows="2" placeholder="نص الحدث الثاني" class="mini-textarea"></textarea>
+        <button class="panel-btn" id="hlPreviewBtn" style="background:var(--primary); color:#fff; border-color:transparent;">💾 حفظ للجميع</button>
+        <div class="panel-note" id="hlSaveNote" style="display:none;"></div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-title">💌 أمنيات الشهر</div>
+        <input id="wishTitleInput" type="text" placeholder="عنوان الصندوق (مثال: أمنيات أكتوبر)" style="width:100%; margin-bottom:8px;">
+        <div class="panel-mini-form" style="margin-bottom:6px;">
+          <input id="wish1BInput" type="text" placeholder="سطر 1 — عنوان">
+          <input id="wish1SInput" type="text" placeholder="سطر 1 — وصف">
+        </div>
+        <div class="panel-mini-form" style="margin-bottom:6px;">
+          <input id="wish2BInput" type="text" placeholder="سطر 2 — عنوان">
+          <input id="wish2SInput" type="text" placeholder="سطر 2 — وصف">
+        </div>
+        <div class="panel-mini-form">
+          <input id="wish3BInput" type="text" placeholder="سطر 3 — عنوان">
+          <input id="wish3SInput" type="text" placeholder="سطر 3 — وصف">
+        </div>
+        <button class="panel-btn" id="wishPreviewBtn" style="background:var(--primary); color:#fff; border-color:transparent;">💾 حفظ للجميع</button>
+        <div class="panel-note" id="wishSaveNote" style="display:none;"></div>
+      </div>
+
       <button class="panel-btn" id="logoutBtn" style="margin-top:var(--sp-5);">تسجيل الخروج من الإعدادات</button>
     </div>
   </div>
 </div>
 
 <script>
+/* ============================================================
+   SUPABASE CONNECTION — fill these two values in once, and every
+   save below (spotlight, highlights, wishes text, schedule-request
+   responses) becomes real and shows for every visitor, not just
+   this browser.
+   ============================================================ */
+const SUPABASE_URL = 'https://ibvyjpjyczaxiwvjbdlr.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Mbi2fTp9k11jnjJqRb3uHw_GXdlc6hC';
+
+let supabaseClient = null;
+try{
+  if(window.supabase && /^https?:\/\//.test(SUPABASE_URL) && SUPABASE_ANON_KEY.length > 20){
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+}catch(e){ console.warn('Supabase not configured yet:', e); }
+
+function supabaseReady(noteElId){
+  if(supabaseClient) return true;
+  const el = noteElId && document.getElementById(noteElId);
+  if(el){ el.textContent = '⚠️ لسا ما تم ربط الموقع بقاعدة البيانات — هذا الجزء مو شغّال بعد.'; el.style.display = 'block'; }
+  return false;
+}
+
+async function saveSetting(key, value){
+  if(!supabaseClient) return false;
+  const { error } = await supabaseClient.from('site_settings').upsert({ key, value });
+  if(error){ console.error(error); return false; }
+  return true;
+}
+
+async function loadAllSettings(){
+  if(!supabaseClient) return;
+  const { data, error } = await supabaseClient.from('site_settings').select('key,value');
+  if(error || !data) return;
+  const map = {};
+  data.forEach(r => { map[r.key] = r.value; });
+
+  if(map.spot_name) setSpotlight(map.spot_name, map.spot_gender || 'f', map.spot_month || '');
+
+  const applyText = (settingKey, editKey) => {
+    if(map[settingKey] === undefined) return;
+    const el = document.querySelector(`[data-edit-key="${editKey}"]`);
+    if(el) el.textContent = map[settingKey];
+  };
+  applyText('hl1_title','hl1-title'); applyText('hl1_body','hl1-body');
+  applyText('hl2_title','hl2-title'); applyText('hl2_body','hl2-body');
+  applyText('wishes_title','wishes-title');
+  applyText('wish1_b','wish1-b'); applyText('wish1_s','wish1-s');
+  applyText('wish2_b','wish2-b'); applyText('wish2_s','wish2-s');
+  applyText('wish3_b','wish3-b'); applyText('wish3_s','wish3-s');
+}
+
 /* ============================================================
    DATA — edit here to update the month without touching markup
    ============================================================ */
@@ -1268,9 +1463,42 @@ function openAmalDashboard(){
   amalPasswordModal.classList.remove('show');
   document.getElementById('amalHeroLine').textContent = AMAL_HERO_LINES[Math.floor(Math.random() * AMAL_HERO_LINES.length)];
   buildAmalReport();
+  loadWishesResponses();
   amalDashboard.classList.add('show');
   document.body.style.overflow = 'hidden';
 }
+
+async function loadWishesResponses(){
+  const note = document.getElementById('wishesResponsesNote');
+  const list = document.getElementById('wishesResponsesList');
+  if(!supabaseReady('wishesResponsesNote')) { list.innerHTML = ''; return; }
+  note.style.display = 'none';
+
+  const { data, error } = await supabaseClient
+    .from('wishes_responses')
+    .select('*')
+    .order('created_at', { ascending:false });
+
+  if(error){
+    note.style.display = 'block';
+    note.textContent = '⚠️ صار خطأ بجلب الردود: ' + error.message;
+    return;
+  }
+  if(!data || !data.length){
+    list.innerHTML = '<div class="panel-note" style="margin-top:0;">ما فيه ردود مسجّلة بعد.</div>';
+    return;
+  }
+  list.innerHTML = data.map(r => `
+    <div class="wish-response-card">
+      <span class="wr-time">${new Date(r.created_at).toLocaleString('ar-EG', { dateStyle:'medium', timeStyle:'short' })}</span>
+      <b>${r.employee_name || 'بدون اسم'}</b>
+      <p>🗓️ الأيام المفضّلة: <span>${r.preferred_days_off || '—'}</span></p>
+      ${r.notes ? `<p>📝 ملاحظات: <span>${r.notes}</span></p>` : ''}
+    </div>
+  `).join('');
+}
+document.getElementById('refreshWishesBtn').addEventListener('click', loadWishesResponses);
+
 document.getElementById('amalPasswordSubmitBtn').addEventListener('click', () => {
   if(amalPasswordInput.value === AMAL_PASSWORD) openAmalDashboard();
   else amalPasswordError.classList.add('show');
@@ -1304,11 +1532,17 @@ const PREVIOUS_REPORT = {
 
 function csatClass(v){ return v >= 93 ? 'csat-high' : v >= 88 ? 'csat-mid' : 'csat-low'; }
 
+function csatBar(csat){
+  const color = csat >= 93 ? '#2E9E5B' : csat >= 88 ? '#C99A2E' : '#C13B3B';
+  return `<div class="csat-bar-wrap"><div class="csat-bar-track"><div class="csat-bar-fill" style="width:${Math.min(csat,100)}%; background:${color};"></div></div><span class="csat-pill ${csatClass(csat)}">${csat}%</span></div>`;
+}
+
 function renderReportTable(headId, bodyId, footId){
   const cols = ['ID','الموظف','مستقبلة','صادرة','مهملة','AHT','ASA','CSAT%','وقت الدوام','وقت الاستراحة'];
   document.getElementById(headId).innerHTML = cols.map(c => `<th>${c}</th>`).join('');
 
-  document.getElementById(bodyId).innerHTML = AGENT_REPORT.map(a => `
+  const sorted = [...AGENT_REPORT].sort((a,b) => b.csat - a.csat);
+  document.getElementById(bodyId).innerHTML = sorted.map(a => `
     <tr>
       <td>${a.id}</td>
       <td class="name-cell">${a.name}</td>
@@ -1317,7 +1551,7 @@ function renderReportTable(headId, bodyId, footId){
       <td>${a.abandoned}</td>
       <td>${a.aht}</td>
       <td>${a.asa}</td>
-      <td><span class="csat-pill ${csatClass(a.csat)}">${a.csat}%</span></td>
+      <td>${csatBar(a.csat)}</td>
       <td>${a.staffTime}</td>
       <td>${a.breakTime}</td>
     </tr>
@@ -1400,9 +1634,54 @@ function buildAmalReport(){
 }
 
 function buildPublicReport(){
-  const top = AGENT_REPORT.reduce((a,b) => b.csat > a.csat ? b : a);
-  document.getElementById('publicTopHighlight').innerHTML =
-    `🏆 الأفضل هذي الفترة بنسبة الرضا: <b>${top.name} — ${top.csat}%</b> — عقبال الجميع! 👏`;
+  const sorted = [...AGENT_REPORT].sort((a,b) => b.csat - a.csat);
+  const top3 = sorted.slice(0,3);
+
+  // KPI cards
+  const t = AGENT_REPORT_TOTAL;
+  document.getElementById('reportKpiGrid').innerHTML = `
+    <div class="kpi-card"><span>إجمالي المكالمات</span><b>${t.answered.toLocaleString('en-US')}</b></div>
+    <div class="kpi-card"><span>المهملة</span><b>${t.abandoned}</b></div>
+    <div class="kpi-card"><span>متوسط AHT</span><b>${t.aht}</b></div>
+    <div class="kpi-card"><span>متوسط ASA</span><b>${t.asa}</b></div>
+    <div class="kpi-card"><span>متوسط CSAT</span><b>${t.csat}%</b></div>
+  `;
+
+  // Top 3 podium
+  const medals = ['🥇','🥈','🥉'];
+  const order = [1,0,2]; // display order: 2nd, 1st, 3rd (podium look)
+  document.getElementById('reportPodium').innerHTML = order
+    .filter(i => top3[i])
+    .map(i => `
+      <div class="podium-card rank-${i+1}">
+        <div class="podium-medal">${medals[i]}</div>
+        <div class="podium-name">${top3[i].name}</div>
+        <div class="podium-score">${top3[i].csat}%</div>
+      </div>
+    `).join('');
+
+  // team-wide trend vs previous period (only counting agents present in both)
+  const withPrev = AGENT_REPORT.filter(a => PREVIOUS_REPORT[a.id] !== undefined);
+  const trendPill = document.getElementById('reportTrendPill');
+  if(withPrev.length){
+    const avgNow = withPrev.reduce((s,a) => s + a.csat, 0) / withPrev.length;
+    const avgPrev = withPrev.reduce((s,a) => s + PREVIOUS_REPORT[a.id], 0) / withPrev.length;
+    const diff = Math.round((avgNow - avgPrev) * 10) / 10;
+    if(diff > 0){
+      trendPill.className = 'trend-pill up';
+      trendPill.textContent = `▲ تحسّن الفريق بمعدل ${diff}% عن الفترة السابقة`;
+    }else if(diff < 0){
+      trendPill.className = 'trend-pill down';
+      trendPill.textContent = `▼ انخفض معدل الفريق ${Math.abs(diff)}% عن الفترة السابقة`;
+    }else{
+      trendPill.className = 'trend-pill flat';
+      trendPill.textContent = `⏸ نفس معدل الفترة السابقة`;
+    }
+  }else{
+    trendPill.className = 'trend-pill flat';
+    trendPill.textContent = `أول تقرير مسجّل — بنقارنه بالفترة القادمة`;
+  }
+
   renderReportTable('publicReportHead', 'publicReportBody', 'publicReportFoot');
 }
 buildPublicReport();
@@ -1422,9 +1701,31 @@ const passwordError = document.getElementById('passwordError');
 function isAdmin(){
   try{ return localStorage.getItem(ADMIN_KEY) === 'true'; }catch(e){ return false; }
 }
+function prefillContentEditors(){
+  const spotName = document.querySelector('[data-edit-key="spot-name"]');
+  if(spotName) document.getElementById('spotNameInput').value = spotName.textContent.trim();
+  const kicker = document.querySelector('[data-edit-key="spot-kicker"]');
+  if(kicker){
+    const m = kicker.textContent.match(/—\s*(.+)$/);
+    if(m) document.getElementById('spotMonthInput').value = m[1].trim();
+    document.getElementById('spotGenderInput').value = kicker.textContent.includes('موظفة') ? 'f' : 'm';
+  }
+  const setVal = (inputId, key) => {
+    const el = document.querySelector(`[data-edit-key="${key}"]`);
+    if(el) document.getElementById(inputId).value = el.textContent.trim();
+  };
+  setVal('hl1TitleInput','hl1-title'); setVal('hl1BodyInput','hl1-body');
+  setVal('hl2TitleInput','hl2-title'); setVal('hl2BodyInput','hl2-body');
+  setVal('wishTitleInput','wishes-title');
+  setVal('wish1BInput','wish1-b'); setVal('wish1SInput','wish1-s');
+  setVal('wish2BInput','wish2-b'); setVal('wish2SInput','wish2-s');
+  setVal('wish3BInput','wish3-b'); setVal('wish3SInput','wish3-s');
+}
+
 function showControlPanel(){
   passwordGate.style.display = 'none';
   controlPanel.style.display = 'block';
+  prefillContentEditors();
 }
 function openModal(){
   modal.classList.add('show');
@@ -1485,6 +1786,304 @@ document.getElementById('copyRequestBtn').addEventListener('click', () => {
   }).catch(() => alert(dated));
 });
 
+/* generic "copy this output box" wiring, reused by every generator below */
+function wireCopyButton(btnId, outputId){
+  document.getElementById(btnId).addEventListener('click', () => {
+    const text = document.getElementById(outputId).value;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById(btnId);
+      const original = btn.textContent;
+      btn.textContent = '✅ تم النسخ';
+      setTimeout(() => { btn.textContent = original; }, 1800);
+    }).catch(() => alert(text));
+  });
+}
+
+/* ============================================================
+   SPOTLIGHT / HIGHLIGHTS / WISHES — live preview + code generator
+   ============================================================ */
+function showSaveNote(elId, ok, savedCount, totalCount){
+  const el = document.getElementById(elId);
+  el.style.display = 'block';
+  el.textContent = ok
+    ? '✅ تم الحفظ — يظهر الآن عند جميع الموظفين.'
+    : '⚠️ لسا ما تم ربط الموقع بقاعدة البيانات — هذا الجزء مو شغّال بعد (يحتاج ربط Supabase أول).';
+}
+
+document.getElementById('spotPreviewBtn').addEventListener('click', async () => {
+  const name = document.getElementById('spotNameInput').value.trim();
+  const gender = document.getElementById('spotGenderInput').value;
+  const month = document.getElementById('spotMonthInput').value.trim();
+  if(!name || !month) return;
+  setSpotlight(name, gender, month); // instant feedback on this device while saving
+  if(!supabaseReady('spotSaveNote')) return;
+  const results = await Promise.all([
+    saveSetting('spot_name', name),
+    saveSetting('spot_gender', gender),
+    saveSetting('spot_month', month),
+  ]);
+  showSaveNote('spotSaveNote', results.every(Boolean));
+});
+
+document.getElementById('hlPreviewBtn').addEventListener('click', async () => {
+  const vals = {
+    hl1_title: document.getElementById('hl1TitleInput').value.trim(),
+    hl1_body:  document.getElementById('hl1BodyInput').value.trim(),
+    hl2_title: document.getElementById('hl2TitleInput').value.trim(),
+    hl2_body:  document.getElementById('hl2BodyInput').value.trim(),
+  };
+  const editKeyOf = { hl1_title:'hl1-title', hl1_body:'hl1-body', hl2_title:'hl2-title', hl2_body:'hl2-body' };
+  Object.entries(vals).forEach(([key, val]) => {
+    if(!val) return;
+    document.querySelector(`[data-edit-key="${editKeyOf[key]}"]`).textContent = val;
+  });
+  if(!supabaseReady('hlSaveNote')) return;
+  const entries = Object.entries(vals).filter(([,v]) => v);
+  const results = await Promise.all(entries.map(([k,v]) => saveSetting(k, v)));
+  showSaveNote('hlSaveNote', results.every(Boolean));
+});
+
+document.getElementById('wishPreviewBtn').addEventListener('click', async () => {
+  const vals = {
+    wishes_title: document.getElementById('wishTitleInput').value.trim(),
+    wish1_b: document.getElementById('wish1BInput').value.trim(),
+    wish1_s: document.getElementById('wish1SInput').value.trim(),
+    wish2_b: document.getElementById('wish2BInput').value.trim(),
+    wish2_s: document.getElementById('wish2SInput').value.trim(),
+    wish3_b: document.getElementById('wish3BInput').value.trim(),
+    wish3_s: document.getElementById('wish3SInput').value.trim(),
+  };
+  const editKeyOf = {
+    wishes_title:'wishes-title', wish1_b:'wish1-b', wish1_s:'wish1-s',
+    wish2_b:'wish2-b', wish2_s:'wish2-s', wish3_b:'wish3-b', wish3_s:'wish3-s',
+  };
+  Object.entries(vals).forEach(([key, val]) => {
+    if(!val) return;
+    document.querySelector(`[data-edit-key="${editKeyOf[key]}"]`).textContent = val;
+  });
+  if(!supabaseReady('wishSaveNote')) return;
+  const entries = Object.entries(vals).filter(([,v]) => v);
+  const results = await Promise.all(entries.map(([k,v]) => saveSetting(k, v)));
+  showSaveNote('wishSaveNote', results.every(Boolean));
+});
+
+/* ============================================================
+   PASTE FROM EXCEL — REPORT
+   ============================================================ */
+function splitPastedTable(text){
+  return text.trim().split(/\r?\n/).map(line => line.split('\t').map(c => c.trim()));
+}
+function findCol(header, aliases){
+  return header.findIndex(h => aliases.some(a => h.toLowerCase().replace(/%/g,'').trim() === a));
+}
+
+document.getElementById('reportParseBtn').addEventListener('click', () => {
+  const note = document.getElementById('reportParseNote');
+  const raw = document.getElementById('reportPasteBox').value;
+  if(!raw.trim()){ note.textContent = 'الصقي بيانات الجدول أولًا.'; return; }
+
+  try{
+    const rows = splitPastedTable(raw);
+    const header = rows[0].map(h => h.toLowerCase().trim());
+    const idIdx = findCol(header, ['id']);
+    const nameIdx = findCol(header, ['agent name', 'agent name2', 'name']);
+    const ansIdx = findCol(header, ['answered']);
+    const outIdx = findCol(header, ['outbound']);
+    const abnIdx = findCol(header, ['abandoned']);
+    const ahtIdx = findCol(header, ['aht']);
+    const asaIdx = findCol(header, ['asa']);
+    const csatIdx = findCol(header, ['csat', 'csat%']);
+    const staffIdx = findCol(header, ['staff time']);
+    const breakIdx = findCol(header, ['break time']);
+
+    if(idIdx === -1 || nameIdx === -1 || csatIdx === -1){
+      note.textContent = '⚠️ ما قدرت أفهم الأعمدة — تأكدي إنك نسخت الجدول كامل مع صف العناوين (id, Agent Name, Answered...).';
+      return;
+    }
+
+    const warnings = [];
+    const newAgents = [];
+    let newTotal = null;
+
+    rows.slice(1).forEach(r => {
+      if(r.every(c => !c)) return;
+      const idCell = r[idIdx];
+      const nameCell = r[nameIdx] || '';
+      const isTotalRow = isNaN(parseInt(idCell)) || /total|إجمالي/i.test(nameCell) || /total|إجمالي/i.test(idCell);
+
+      const csatVal = parseInt((r[csatIdx] || '0').replace('%',''));
+
+      if(isTotalRow){
+        newTotal = {
+          answered: parseInt(r[ansIdx]) || 0,
+          outbound: parseInt(r[outIdx]) || 0,
+          abandoned: parseInt(r[abnIdx]) || 0,
+          aht: r[ahtIdx] || '0:00:00',
+          asa: r[asaIdx] || '0:00:00',
+          csat: csatVal,
+          staffTime: r[staffIdx] || '0:00:00',
+          breakTime: r[breakIdx] || '0:00:00',
+        };
+        return;
+      }
+
+      const id = parseInt(idCell);
+      const known = EMPLOYEES.find(e => e.id === id);
+      if(!known) warnings.push(nameCell);
+
+      newAgents.push({
+        id, name: nameCell,
+        arabicName: known ? known.name : nameCell.split(' ')[0],
+        gender: known ? known.gender : 'm',
+        answered: parseInt(r[ansIdx]) || 0,
+        outbound: parseInt(r[outIdx]) || 0,
+        abandoned: parseInt(r[abnIdx]) || 0,
+        aht: r[ahtIdx] || '0:00:00',
+        asa: r[asaIdx] || '0:00:00',
+        csat: csatVal,
+        staffTime: r[staffIdx] || '0:00:00',
+        breakTime: r[breakIdx] || '0:00:00',
+      });
+    });
+
+    if(!newAgents.length){ note.textContent = '⚠️ ما لقيت صفوف بيانات صحيحة.'; return; }
+
+    // shift the current report into "previous period" before overwriting, so
+    // the "most improved" comparison keeps working automatically
+    const prevCsat = {};
+    AGENT_REPORT.forEach(a => { prevCsat[a.id] = a.csat; });
+    Object.keys(PREVIOUS_REPORT).forEach(k => delete PREVIOUS_REPORT[k]);
+    Object.assign(PREVIOUS_REPORT, prevCsat);
+
+    AGENT_REPORT.length = 0;
+    AGENT_REPORT.push(...newAgents);
+    if(newTotal) Object.assign(AGENT_REPORT_TOTAL, newTotal);
+
+    buildPublicReport();
+    if(document.getElementById('amalDashboard').classList.contains('show')) buildAmalReport();
+
+    note.textContent = warnings.length
+      ? `✅ تم التحديث والمعاينة. ⚠️ ما لقيت اسم عربي/جنس محفوظ لـ: ${warnings.join('، ')} — تأكدي منها بالكود قبل الإرسال.`
+      : '✅ تم التحديث والمعاينة أعلى الصفحة بقسم "تقرير الأداء".';
+
+    const out = document.getElementById('reportCodeOutput');
+    out.value =
+      'const AGENT_REPORT = [\n' +
+      newAgents.map(a => `  { id:${a.id}, name:"${a.name}", arabicName:"${a.arabicName}", gender:"${a.gender}", answered:${a.answered}, outbound:${a.outbound}, abandoned:${a.abandoned}, aht:"${a.aht}", asa:"${a.asa}", csat:${a.csat}, staffTime:"${a.staffTime}", breakTime:"${a.breakTime}" },`).join('\n') +
+      '\n];' +
+      (newTotal ? `\nconst AGENT_REPORT_TOTAL = { answered:${newTotal.answered}, outbound:${newTotal.outbound}, abandoned:${newTotal.abandoned}, aht:"${newTotal.aht}", asa:"${newTotal.asa}", csat:${newTotal.csat}, staffTime:"${newTotal.staffTime}", breakTime:"${newTotal.breakTime}" };` : '') +
+      `\nconst PREVIOUS_REPORT = { ${Object.entries(prevCsat).map(([k,v]) => `${k}: ${v}`).join(', ')} };`;
+    out.style.display = 'block';
+    document.getElementById('copyReportCodeBtn').style.display = 'block';
+  }catch(err){
+    note.textContent = '⚠️ صار خطأ بقراءة البيانات — تأكدي إنك نسخت من إكسل مباشرة (مو صورة أو نص منسّق).';
+    console.error(err);
+  }
+});
+wireCopyButton('copyReportCodeBtn', 'reportCodeOutput');
+
+/* ============================================================
+   PASTE FROM EXCEL — MONTHLY SCHEDULE
+   ============================================================ */
+const DAY_ALIASES = [
+  ['sun','sunday','الاحد','الأحد'],
+  ['mon','monday','الاثنين','الإثنين'],
+  ['tue','tuesday','الثلاثاء'],
+  ['wed','wednesday','الاربعاء','الأربعاء'],
+  ['thu','thursday','الخميس'],
+  ['fri','friday','الجمعة'],
+  ['sat','saturday','السبت'],
+];
+const STATUS_ALIASES = {
+  work: ['am','work','دوام','حضور'],
+  off: ['wo','off','اوف','أوف','اجازة','إجازة'],
+  special: ['uae','special','خاصة','اجازة خاصة','إجازة خاصة'],
+};
+function normalizeCell(s){ return (s || '').toString().trim().toLowerCase(); }
+function matchDayIndex(headerCell){
+  const norm = normalizeCell(headerCell);
+  for(let i = 0; i < DAY_ALIASES.length; i++){
+    if(DAY_ALIASES[i].some(a => norm === a || norm.includes(a))) return i;
+  }
+  return -1;
+}
+function matchStatus(cell){
+  const norm = normalizeCell(cell);
+  for(const [status, aliases] of Object.entries(STATUS_ALIASES)){
+    if(aliases.some(a => norm === a || norm.includes(a))) return status;
+  }
+  return null;
+}
+
+document.getElementById('scheduleParseBtn').addEventListener('click', () => {
+  const note = document.getElementById('scheduleParseNote');
+  const raw = document.getElementById('schedulePasteBox').value;
+  if(!raw.trim()){ note.textContent = 'الصقي بيانات الجدول أولًا.'; return; }
+
+  try{
+    const rows = splitPastedTable(raw);
+    const header = rows[0];
+    const idIdx = findCol(header.map(h=>h.toLowerCase()), ['id']);
+    const nameIdx = findCol(header.map(h=>h.toLowerCase()), ['agent name', 'agent name2', 'name', 'الموظف']);
+
+    const dayColMap = {}; // headerColIndex -> dayIndex (0=Sun..6=Sat)
+    header.forEach((h, i) => {
+      if(i === idIdx || i === nameIdx) return;
+      const d = matchDayIndex(h);
+      if(d !== -1) dayColMap[i] = d;
+    });
+
+    if(nameIdx === -1 || Object.keys(dayColMap).length < 5){
+      note.textContent = '⚠️ ما قدرت أفهم أعمدة الأيام — تأكدي إن صف العناوين فيه أسماء الأيام (الأحد، الاثنين...) أو (Sun, Mon...).';
+      return;
+    }
+
+    const warnings = [];
+    const newEmployees = [];
+
+    rows.slice(1).forEach((r, rowNum) => {
+      if(r.every(c => !c)) return;
+      const name = (r[nameIdx] || '').trim();
+      if(!name || /total|إجمالي|أيام العمل/i.test(name)) return;
+
+      const id = idIdx !== -1 && r[idIdx] ? parseInt(r[idIdx]) : ('custom-' + Date.now() + '-' + rowNum);
+      const known = EMPLOYEES.find(e => e.id === id) || EMPLOYEES.find(e => e.name === name);
+      if(!known) warnings.push(name);
+
+      const status = new Array(7).fill('work');
+      Object.entries(dayColMap).forEach(([colIdx, dayIdx]) => {
+        const s = matchStatus(r[colIdx]);
+        if(s) status[dayIdx] = s;
+        else warnings.push(`${name}: "${r[colIdx]}"?`);
+      });
+
+      newEmployees.push({ id, name, gender: known ? known.gender : 'm', status });
+    });
+
+    if(!newEmployees.length){ note.textContent = '⚠️ ما لقيت صفوف موظفين صحيحة.'; return; }
+
+    EMPLOYEES.length = 0;
+    EMPLOYEES.push(...newEmployees);
+    buildScheduleTable();
+
+    note.textContent = warnings.length
+      ? `✅ تم التحديث والمعاينة بجدول الدوام. ⚠️ راجعي: ${warnings.slice(0,6).join('، ')}${warnings.length>6 ? '...' : ''}`
+      : '✅ تم التحديث والمعاينة بقسم "جدول دوام الموظفين".';
+
+    const out = document.getElementById('scheduleCodeOutput');
+    out.value =
+      'const EMPLOYEES = [\n' +
+      newEmployees.map(e => `  { id:${typeof e.id === 'string' ? `"${e.id}"` : e.id}, name:"${e.name}", gender:"${e.gender}", status:[${e.status.map(s=>`"${s}"`).join(',')}] },`).join('\n') +
+      '\n];';
+    out.style.display = 'block';
+    document.getElementById('copyScheduleCodeBtn').style.display = 'block';
+  }catch(err){
+    note.textContent = '⚠️ صار خطأ بقراءة البيانات — تأكدي إنك نسخت من إكسل مباشرة (مو صورة أو نص منسّق).';
+    console.error(err);
+  }
+});
+wireCopyButton('copyScheduleCodeBtn', 'scheduleCodeOutput');
+
 /* ============================================================
    MONTH / YEAR — set internally by the developer when updating
    the schedule each month (see the call further below); no admin
@@ -1527,7 +2126,8 @@ function setSpotlight(name, gender, monthName){
   document.querySelector('[data-edit-key="spot-name"]').textContent = name;
   document.getElementById('spotlightAvatar').textContent = name.trim().charAt(0);
 }
-setSpotlight('أسماء', 'f', 'يونيو'); // change the name / gender ('m','f') / month text here whenever it changes
+setSpotlight('أسماء', 'f', 'يونيو'); // fallback shown before Supabase settings (if connected) load in and override it
+loadAllSettings();
 
 /* ============================================================
    DAILY QUOTE
@@ -1624,12 +2224,14 @@ function renderMySchedule(){
 }
 
 /* ============================================================
-   FORM SUBMISSION — sends the response to Amal's Google Sheet
-   via the Apps Script web app URL below
+   FORM SUBMISSION — sends the response into Supabase, so it shows
+   up organized in Amal's dashboard for everyone (see "wishes
+   responses" below); also still sent to Amal's Google Sheet as a
+   backup copy of the raw data.
    ============================================================ */
 const GOOGLE_SHEET_ENDPOINT = 'https://script.google.com/a/macros/salla.sa/s/AKfycbxnIK0CPTAHPPup8_KGBQLLKZtWxNP3LmOpaMtuCjNqWIy0O6CpWmRoPLsr5O01XPFb/exec';
 
-document.getElementById('scheduleForm').addEventListener('submit', function(e){
+document.getElementById('scheduleForm').addEventListener('submit', async function(e){
   e.preventDefault();
   const formData = new FormData(this);
   const payload = {
@@ -1637,6 +2239,11 @@ document.getElementById('scheduleForm').addEventListener('submit', function(e){
     preferred_days_off: formData.get('preferred_days_off') || '',
     notes: formData.get('notes') || ''
   };
+
+  if(supabaseClient){
+    const { error } = await supabaseClient.from('wishes_responses').insert(payload);
+    if(error) console.error('Supabase submit error:', error);
+  }
 
   // "no-cors" is required for Apps Script web apps from a plain HTML page —
   // it means we can't read back a real success/failure response, so the
