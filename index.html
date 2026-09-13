@@ -1160,6 +1160,32 @@ tfoot.schedule-foot td{
       <button class="panel-btn" id="adoptSuggestionBtn" style="background:var(--primary); color:#fff; border-color:transparent;">✅ اعتماد هذا الجدول ونشره للجميع</button>
       <div class="panel-note" id="adoptSuggestionNote" style="display:none;"></div>
     </div>
+
+    <div class="amal-report-card">
+      <h3 style="margin:0 0 var(--sp-2);">🛠️ أداة تنظيم الجدول</h3>
+      <div class="panel-note" style="margin-top:0;">اضغطي على أي خانة لتغيير حالتها (دوام ⟶ أوف ⟶ إجازة خاصة). "حفظ" يخزّن تقدمك بدون ما يظهر عند أحد، و"نشر" يفعّله فورًا عند جميع الموظفين.</div>
+
+      <div class="legend-row" style="margin:var(--sp-3) 0;">
+        <span class="legend-chip"><span class="dot work"></span> دوام</span>
+        <span class="legend-chip"><span class="dot off"></span> أوف</span>
+        <span class="legend-chip"><span class="dot special"></span> إجازة خاصة</span>
+      </div>
+
+      <div id="builderSuggestions"></div>
+
+      <div style="overflow-x:auto; margin:var(--sp-4) 0;">
+        <table class="schedule" id="builderTable">
+          <thead><tr id="builderHead"></tr></thead>
+          <tbody id="builderBody"></tbody>
+        </table>
+      </div>
+
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="panel-btn" id="saveDraftBtn" style="flex:1; min-width:140px;">💾 حفظ (مسودة)</button>
+        <button class="panel-btn" id="publishScheduleBtn" style="flex:1; min-width:140px; background:var(--primary); color:#fff; border-color:transparent;">📢 نشر للجميع</button>
+      </div>
+      <div class="panel-note" id="builderNote" style="display:none;"></div>
+    </div>
   </div>
 </div>
 
@@ -1388,6 +1414,7 @@ document.addEventListener('focusout', async (e) => {
    DATA — edit here to update the month without touching markup
    ============================================================ */
 const DAYS = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const STAFFING_CAPS = { 5: 3, 6: 6 }; // 5=الجمعة max 3 على الدوام, 6=السبت max 6 (أحيانًا 5)
 const GENDER_KEY = 'amal-portal-gender';
 const OVERRIDES_KEY = 'amal-portal-overrides';
 const ADMIN_KEY = 'amal-portal-admin';
@@ -1585,6 +1612,7 @@ function openAmalDashboard(){
   document.getElementById('amalHeroLine').textContent = AMAL_HERO_LINES[Math.floor(Math.random() * AMAL_HERO_LINES.length)];
   buildAmalReport();
   loadWishesResponses();
+  initScheduleBuilder();
   amalDashboard.classList.add('show');
   document.body.style.overflow = 'hidden';
 }
@@ -1684,7 +1712,6 @@ function buildScheduleSuggestion(latestByName){
   // Friday and Saturday have known, specific staffing caps (business need is
   // lower those two days) — check against those directly instead of the
   // generic percentage heuristic, which isn't calibrated for such low caps
-  const STAFFING_CAPS = { 5: 3, 6: 6 }; // 5=الجمعة max 3 على الدوام, 6=السبت max 6 (أحيانًا 5)
   const threshold = Math.ceil(EMPLOYEES.length * 0.4);
   DAYS.forEach((dayName, dayIdx) => {
     if(STAFFING_CAPS[dayIdx] !== undefined){
@@ -1730,6 +1757,108 @@ function buildScheduleSuggestion(latestByName){
     }
   };
 }
+
+/* ============================================================
+   SCHEDULE BUILDER — manual click-to-cycle tool with a
+   save-as-draft / publish-for-everyone workflow
+   ============================================================ */
+let builderData = [];
+
+async function initScheduleBuilder(){
+  builderData = EMPLOYEES.map(e => ({ id:e.id, name:e.name, gender:e.gender, status:[...e.status] }));
+
+  if(supabaseClient){
+    const { data } = await supabaseClient.from('site_settings').select('value').eq('key','schedule_draft').maybeSingle();
+    if(data && data.value){
+      try{ builderData = JSON.parse(data.value); }catch(e){ console.warn('bad schedule_draft JSON', e); }
+    }
+  }
+  renderBuilderTable();
+}
+
+function renderBuilderTable(){
+  const dotFor = s => s === 'work' ? '<span class="dot work"></span>'
+                     : s === 'special' ? '<span class="dot special"></span>'
+                     : '<span class="dot off"></span>';
+
+  document.getElementById('builderHead').innerHTML =
+    '<th class="emp-name">الموظف</th>' + DAYS.map(d => `<th>${d}</th>`).join('');
+
+  document.getElementById('builderBody').innerHTML = builderData.map((e, empIdx) => `
+    <tr>
+      <td class="emp-name">${e.name}</td>
+      ${e.status.map((s, dayIdx) => `<td><div class="status-cell" data-emp="${empIdx}" data-day="${dayIdx}">${dotFor(s)}</div></td>`).join('')}
+    </tr>
+  `).join('');
+
+  document.querySelectorAll('#builderBody .status-cell').forEach(cell => {
+    cell.style.cursor = 'pointer';
+    cell.addEventListener('click', () => {
+      const cycle = { work:'off', off:'special', special:'work' };
+      const empIdx = Number(cell.dataset.emp), dayIdx = Number(cell.dataset.day);
+      builderData[empIdx].status[dayIdx] = cycle[builderData[empIdx].status[dayIdx]];
+      renderBuilderTable();
+    });
+  });
+
+  renderBuilderSuggestions();
+}
+
+function renderBuilderSuggestions(){
+  const notes = [];
+  const threshold = Math.ceil(builderData.length * 0.4);
+
+  DAYS.forEach((dayName, dayIdx) => {
+    const workingCount = builderData.filter(e => e.status[dayIdx] === 'work').length;
+    const offCount = builderData.length - workingCount;
+    if(STAFFING_CAPS[dayIdx] !== undefined){
+      if(workingCount > STAFFING_CAPS[dayIdx]){
+        notes.push(`⚠️ ${dayName}: مجدول ${workingCount} للدوام، والحد الأقصى ${STAFFING_CAPS[dayIdx]}.`);
+      }
+    }else if(offCount > threshold){
+      notes.push(`⚠️ ${dayName}: ${offCount} من ${builderData.length} أوف بنفس اليوم — راجعي التغطية.`);
+    }
+  });
+
+  // fairness check: flag employees with unusually high/low total REST days
+  // ("special" is excluded — it marks days worked with another team/assignment,
+  // not personal rest, e.g. an employee shared with a different branch)
+  const offCounts = builderData.map(e => e.status.filter(s => s === 'off').length);
+  const avgOff = offCounts.reduce((a,b) => a+b, 0) / (offCounts.length || 1);
+  builderData.forEach((e, i) => {
+    if(Math.abs(offCounts[i] - avgOff) >= 2){
+      notes.push(`ℹ️ ${e.name}: عدد أيام الأوف (${offCounts[i]}) يختلف واضح عن متوسط الفريق (${avgOff.toFixed(1)}).`);
+    }
+  });
+
+  document.getElementById('builderSuggestions').innerHTML = notes.length
+    ? notes.map(n => `<div class="suggestion-warning">${n}</div>`).join('')
+    : `<div class="suggestion-warning" style="background:#E1F3E7; color:#1E6B3E;">✅ التوزيع الحالي متوازن، ما فيه ملاحظات.</div>`;
+}
+
+document.getElementById('saveDraftBtn').addEventListener('click', async () => {
+  const note = document.getElementById('builderNote');
+  note.style.display = 'block';
+  if(!supabaseClient){ note.textContent = '⚠️ لسا ما تم ربط الموقع بقاعدة البيانات — ما قدرت أحفظ المسودة.'; return; }
+  note.textContent = 'جاري الحفظ...';
+  const ok = await saveSetting('schedule_draft', JSON.stringify(builderData));
+  note.textContent = ok ? '💾 تم حفظ تقدمك — لسا ما يظهر عند الموظفين، ارجعي أي وقت تكملين.' : '⚠️ صار خطأ أثناء الحفظ.';
+});
+
+document.getElementById('publishScheduleBtn').addEventListener('click', async () => {
+  if(!confirm('هذا يستبدل جدول الدوام الحالي عند جميع الموظفين فورًا. متأكدة؟')) return;
+  const note = document.getElementById('builderNote');
+  note.style.display = 'block';
+
+  EMPLOYEES.length = 0;
+  EMPLOYEES.push(...builderData);
+  buildScheduleTable();
+
+  if(!supabaseClient){ note.textContent = '⚠️ لسا ما تم ربط الموقع بقاعدة البيانات — الجدول تحدّث بجهازك بس.'; return; }
+  note.textContent = 'جاري النشر...';
+  const ok = await saveSetting('employees', JSON.stringify(builderData));
+  note.textContent = ok ? '📢 تم النشر — يظهر الآن عند جميع الموظفين.' : '⚠️ صار خطأ أثناء النشر.';
+});
 
 
 document.getElementById('amalPasswordSubmitBtn').addEventListener('click', () => {
