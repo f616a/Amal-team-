@@ -526,6 +526,12 @@ table.amal-report tfoot td{ background:var(--primary-tint); font-weight:800; col
   padding:10px 12px; font-size:12.5px; margin-bottom:8px; line-height:1.7;
 }
 
+.builder-delete-btn{
+  border:none; background:var(--rose-tint); color:var(--rose); width:20px; height:20px;
+  border-radius:50%; font-size:11px; line-height:1; cursor:pointer; margin-inline-start:8px; vertical-align:middle;
+  display:inline-flex; align-items:center; justify-content:center; flex:none;
+}
+
 
 /* ============================================================
    CATEGORY NAV + BACK TO TOP
@@ -1171,6 +1177,15 @@ tfoot.schedule-foot td{
         <span class="legend-chip"><span class="dot special"></span> إجازة خاصة</span>
       </div>
 
+      <div class="panel-mini-form" style="margin-bottom:var(--sp-3);">
+        <input id="builderNewEmpName" type="text" placeholder="اسم موظف جديد">
+        <select id="builderNewEmpGender">
+          <option value="m">ذكر</option>
+          <option value="f">أنثى</option>
+        </select>
+        <button id="builderAddEmpBtn" type="button">➕ إضافة</button>
+      </div>
+
       <div id="builderSuggestions"></div>
 
       <div style="overflow-x:auto; margin:var(--sp-4) 0;">
@@ -1786,7 +1801,7 @@ function renderBuilderTable(){
 
   document.getElementById('builderBody').innerHTML = builderData.map((e, empIdx) => `
     <tr>
-      <td class="emp-name">${e.name}</td>
+      <td class="emp-name">${e.name}<button class="builder-delete-btn" data-emp="${empIdx}" title="حذف الموظف">✕</button></td>
       ${e.status.map((s, dayIdx) => `<td><div class="status-cell" data-emp="${empIdx}" data-day="${dayIdx}">${dotFor(s)}</div></td>`).join('')}
     </tr>
   `).join('');
@@ -1801,8 +1816,27 @@ function renderBuilderTable(){
     });
   });
 
+  document.querySelectorAll('.builder-delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const empIdx = Number(btn.dataset.emp);
+      if(!confirm(`حذف ${builderData[empIdx].name} من الجدول؟ (يحتاج "نشر" بعدها عشان يصير رسمي)`)) return;
+      builderData.splice(empIdx, 1);
+      renderBuilderTable();
+    });
+  });
+
   renderBuilderSuggestions();
 }
+
+document.getElementById('builderAddEmpBtn').addEventListener('click', () => {
+  const nameInput = document.getElementById('builderNewEmpName');
+  const name = nameInput.value.trim();
+  if(!name){ nameInput.focus(); return; }
+  const gender = document.getElementById('builderNewEmpGender').value;
+  builderData.push({ id:'custom-' + Date.now(), name, gender, status:["work","work","work","work","work","work","work"] });
+  nameInput.value = '';
+  renderBuilderTable();
+});
 
 function renderBuilderSuggestions(){
   const notes = [];
