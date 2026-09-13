@@ -1232,6 +1232,15 @@ tfoot.schedule-foot td{
       </div>
 
       <div class="panel-section">
+        <div class="panel-section-title">🖼️ صورة الواجهة</div>
+        <div class="panel-note" style="margin-top:0;">اختاري صورة جديدة تظهر أعلى صفحة الترحيب لجميع الموظفين.</div>
+        <input type="file" id="heroImageInput" accept="image/*" style="width:100%; margin-bottom:8px;">
+        <img id="heroImagePreview" style="display:none; width:100%; border-radius:var(--r-md); margin-bottom:8px;">
+        <button class="panel-btn" id="heroImageSaveBtn" style="background:var(--primary); color:#fff; border-color:transparent;">💾 حفظ للجميع</button>
+        <div class="panel-note" id="heroImageNote" style="display:none;"></div>
+      </div>
+
+      <div class="panel-section">
         <div class="panel-section-title">⭐ موظف/موظفة الشهر</div>
         <div class="panel-mini-form">
           <input id="spotNameInput" type="text" placeholder="الاسم">
@@ -1318,11 +1327,15 @@ async function loadAllSettings(){
   data.forEach(r => { map[r.key] = r.value; });
 
   if(map.spot_name) setSpotlight(map.spot_name, map.spot_gender || 'f', map.spot_month || '');
+  if(map.hero_banner_image){
+    const heroImg = document.querySelector('.hero-banner img');
+    if(heroImg) heroImg.src = map.hero_banner_image;
+  }
 
   // generic: any other saved key is applied straight to the matching
   // [data-edit-key] element — this is what makes "live edit mode" below work
   // for literally any text on the page, not just the few dedicated fields
-  const SPECIAL_KEYS = ['spot_name','spot_gender','spot_month','agent_report','agent_report_total','previous_report','employees'];
+  const SPECIAL_KEYS = ['spot_name','spot_gender','spot_month','agent_report','agent_report_total','previous_report','employees','hero_banner_image'];
   Object.entries(map).forEach(([key, value]) => {
     if(SPECIAL_KEYS.includes(key)) return;
     const el = document.querySelector(`[data-edit-key="${key}"]`);
@@ -2035,6 +2048,56 @@ function showSaveNote(elId, ok, savedCount, totalCount){
     ? '✅ تم الحفظ — يظهر الآن عند جميع الموظفين.'
     : '⚠️ لسا ما تم ربط الموقع بقاعدة البيانات — هذا الجزء مو شغّال بعد (يحتاج ربط Supabase أول).';
 }
+
+/* ============================================================
+   HERO BANNER IMAGE — upload, compress client-side, save for everyone
+   ============================================================ */
+function resizeImageFile(file, maxWidth, quality){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+let pendingHeroImage = null;
+document.getElementById('heroImageInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  pendingHeroImage = await resizeImageFile(file, 1200, 0.82);
+  const preview = document.getElementById('heroImagePreview');
+  preview.src = pendingHeroImage;
+  preview.style.display = 'block';
+});
+
+document.getElementById('heroImageSaveBtn').addEventListener('click', async () => {
+  const note = document.getElementById('heroImageNote');
+  if(!pendingHeroImage){ note.style.display = 'block'; note.textContent = 'اختاري صورة أولًا.'; return; }
+
+  document.querySelector('.hero-banner img').src = pendingHeroImage; // instant local preview
+
+  note.style.display = 'block';
+  if(!supabaseClient){
+    note.textContent = '⚠️ لسا ما تم ربط الموقع بقاعدة البيانات — الصورة تغيّرت بجهازك بس.';
+    return;
+  }
+  note.textContent = 'جاري الحفظ...';
+  const ok = await saveSetting('hero_banner_image', pendingHeroImage);
+  note.textContent = ok ? '✅ تم الحفظ — الصورة الجديدة تظهر الآن عند جميع الموظفين.' : '⚠️ صار خطأ أثناء الحفظ.';
+});
 
 document.getElementById('spotPreviewBtn').addEventListener('click', async () => {
   const name = document.getElementById('spotNameInput').value.trim();
