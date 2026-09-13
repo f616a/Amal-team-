@@ -521,6 +521,11 @@ table.amal-report tfoot td{ background:var(--primary-tint); font-weight:800; col
 .wish-response-card p{ margin:6px 0 0; font-size:13px; color:var(--text-secondary); }
 .wish-response-card p span{ display:block; margin-top:2px; }
 
+.suggestion-warning{
+  background:var(--sand-tint); color:#7a5d29; border-radius:var(--r-sm);
+  padding:10px 12px; font-size:12.5px; margin-bottom:8px; line-height:1.7;
+}
+
 
 /* ============================================================
    CATEGORY NAV + BACK TO TOP
@@ -1003,7 +1008,6 @@ tfoot.schedule-foot td{
       <div class="cal-top">
         <h3 class="cal-title" id="calTitle">تقويم سبتمبر 2026</h3>
         <div class="cal-legend">
-          <span><i style="background:var(--sand-tint)"></i>عطلة نهاية الأسبوع</span>
           <span><i style="background:var(--primary)"></i>اليوم</span>
         </div>
       </div>
@@ -1132,6 +1136,20 @@ tfoot.schedule-foot td{
       </div>
       <div id="wishesResponsesNote" class="panel-note" style="margin-top:0;"></div>
       <div id="wishesResponsesList"></div>
+    </div>
+
+    <div class="amal-report-card" id="scheduleSuggestionCard" style="display:none;">
+      <h3 style="margin:0 0 var(--sp-2);">🧠 جدول مقترح للشهر القادم</h3>
+      <div class="panel-note" style="margin-top:0;">مبني تلقائيًا على رغبات الموظفين وجدول هذا الشهر — راجعيه قبل الاعتماد.</div>
+      <div id="scheduleSuggestionWarnings"></div>
+      <div style="overflow-x:auto; margin:var(--sp-4) 0;">
+        <table class="amal-report" id="suggestionTable">
+          <thead><tr id="suggestionHead"></tr></thead>
+          <tbody id="suggestionBody"></tbody>
+        </table>
+      </div>
+      <button class="panel-btn" id="adoptSuggestionBtn" style="background:var(--primary); color:#fff; border-color:transparent;">✅ اعتماد هذا الجدول ونشره للجميع</button>
+      <div class="panel-note" id="adoptSuggestionNote" style="display:none;"></div>
     </div>
   </div>
 </div>
@@ -1348,7 +1366,6 @@ document.addEventListener('focusout', async (e) => {
    DATA — edit here to update the month without touching markup
    ============================================================ */
 const DAYS = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
-const WEEKEND_INDEXES = [5,6]; // الجمعة والسبت
 const GENDER_KEY = 'amal-portal-gender';
 const OVERRIDES_KEY = 'amal-portal-overrides';
 const ADMIN_KEY = 'amal-portal-admin';
@@ -1446,11 +1463,8 @@ function buildCalendar(year, month){ // month: 0-indexed
 
   for(let i=0;i<firstDay;i++){ html += '<div class="cal-cell empty"></div>'; }
   for(let day=1; day<=daysInMonth; day++){
-    const dow = new Date(year, month, day).getDay();
-    const isWeekend = WEEKEND_INDEXES.includes(dow);
     const isToday = isCurrentMonth && today.getDate() === day;
-    const cls = isToday ? 'today' : (isWeekend ? 'weekend' : '');
-    html += `<div class="cal-cell ${cls}">${day}</div>`;
+    html += `<div class="cal-cell ${isToday ? 'today' : ''}">${day}</div>`;
   }
   grid.innerHTML = html;
 }
@@ -1556,7 +1570,8 @@ function openAmalDashboard(){
 async function loadWishesResponses(){
   const note = document.getElementById('wishesResponsesNote');
   const list = document.getElementById('wishesResponsesList');
-  if(!supabaseReady('wishesResponsesNote')) { list.innerHTML = ''; return; }
+  const suggestionCard = document.getElementById('scheduleSuggestionCard');
+  if(!supabaseReady('wishesResponsesNote')) { list.innerHTML = ''; suggestionCard.style.display = 'none'; return; }
   note.style.display = 'none';
 
   const { data, error } = await supabaseClient
@@ -1571,6 +1586,7 @@ async function loadWishesResponses(){
   }
   if(!data || !data.length){
     list.innerHTML = '<div class="panel-note" style="margin-top:0;">ما فيه ردود مسجّلة بعد.</div>';
+    suggestionCard.style.display = 'none';
     return;
   }
   list.innerHTML = data.map(r => `
@@ -1581,8 +1597,118 @@ async function loadWishesResponses(){
       ${r.notes ? `<p>📝 ملاحظات: <span>${r.notes}</span></p>` : ''}
     </div>
   `).join('');
+
+  // one response per employee counts — keep only the most recent per name
+  const latestByName = {};
+  data.forEach(r => {
+    const key = (r.employee_name || '').trim();
+    if(!key) return;
+    if(!latestByName[key] || new Date(r.created_at) > new Date(latestByName[key].created_at)){
+      latestByName[key] = r;
+    }
+  });
+  const respondentCount = Object.keys(latestByName).length;
+  const teamSize = EMPLOYEES.length;
+
+  if(respondentCount < teamSize){
+    suggestionCard.style.display = 'none';
+    note.style.display = 'block';
+    note.textContent = `📋 ${respondentCount} من ${teamSize} موظف قدّموا رغباتهم — الجدول المقترح يظهر تلقائيًا بعد اكتمال الجميع.`;
+  }else{
+    suggestionCard.style.display = 'block';
+    buildScheduleSuggestion(latestByName);
+  }
 }
 document.getElementById('refreshWishesBtn').addEventListener('click', loadWishesResponses);
+
+/* ============================================================
+   SMART SCHEDULE SUGGESTION — built from current schedule +
+   everyone's submitted preferences, once all responses are in
+   ============================================================ */
+function parseRequestedDays(text){
+  const norm = (text || '').toLowerCase();
+  const found = [];
+  DAY_ALIASES.forEach((aliases, dayIdx) => {
+    if(aliases.some(a => norm.includes(a))) found.push(dayIdx);
+  });
+  return found;
+}
+
+function buildScheduleSuggestion(latestByName){
+  const warnings = [];
+  const proposal = EMPLOYEES.map(emp => {
+    const currentOff = emp.status.map((s,i) => s !== 'work' ? i : -1).filter(i => i !== -1);
+    const response = latestByName[emp.name.trim()];
+    let requested = response ? parseRequestedDays(response.preferred_days_off) : [];
+
+    let finalOff;
+    if(requested.length){
+      finalOff = [...requested];
+      // if they only named fewer days than their usual number of rest days,
+      // fill the rest from their current pattern so their total days off doesn't shrink
+      if(finalOff.length < currentOff.length){
+        currentOff.forEach(d => { if(!finalOff.includes(d) && finalOff.length < currentOff.length) finalOff.push(d); });
+      }
+    }else{
+      finalOff = currentOff; // no clear request found — keep this month's pattern
+      if(response) warnings.push(`ما قدرت أفهم الأيام المطلوبة من رد ${emp.name} ("${response.preferred_days_off}") — خليت جدوله الحالي.`);
+    }
+
+    const status = new Array(7).fill('work');
+    finalOff.forEach(d => { status[d] = 'off'; });
+    return { id:emp.id, name:emp.name, gender:emp.gender, status };
+  });
+
+  // Friday and Saturday have known, specific staffing caps (business need is
+  // lower those two days) — check against those directly instead of the
+  // generic percentage heuristic, which isn't calibrated for such low caps
+  const STAFFING_CAPS = { 5: 3, 6: 6 }; // 5=الجمعة max 3 على الدوام, 6=السبت max 6 (أحيانًا 5)
+  const threshold = Math.ceil(EMPLOYEES.length * 0.4);
+  DAYS.forEach((dayName, dayIdx) => {
+    if(STAFFING_CAPS[dayIdx] !== undefined){
+      const workingCount = proposal.filter(e => e.status[dayIdx] === 'work').length;
+      if(workingCount > STAFFING_CAPS[dayIdx]){
+        warnings.push(`⚠️ يوم ${dayName}: مجدول ${workingCount} موظف للدوام، والحد الأقصى المعتاد ${STAFFING_CAPS[dayIdx]} — راجعي التوزيع.`);
+      }
+      return;
+    }
+    // any other day: flag unusually heavy clustering of requested days off
+    const offCount = proposal.filter(e => e.status[dayIdx] !== 'work').length;
+    if(offCount > threshold){
+      warnings.push(`⚠️ يوم ${dayName}: ${offCount} من ${EMPLOYEES.length} موظف طلبوا يكونون أوف بنفس اليوم — راجعي التغطية.`);
+    }
+  });
+
+  document.getElementById('scheduleSuggestionWarnings').innerHTML = warnings.length
+    ? warnings.map(w => `<div class="suggestion-warning">${w}</div>`).join('')
+    : `<div class="suggestion-warning" style="background:#E1F3E7; color:#1E6B3E;">✅ ما فيه تعارضات واضحة — كل الرغبات أمكن استيعابها بدون ازدحام على يوم معيّن.</div>`;
+
+  const dotFor = s => s === 'work' ? '<span class="dot work"></span>' : '<span class="dot off"></span>';
+  document.getElementById('suggestionHead').innerHTML =
+    '<th class="emp-name">الموظف</th>' + DAYS.map(d => `<th>${d}</th>`).join('');
+  document.getElementById('suggestionBody').innerHTML = proposal.map(e => `
+    <tr>
+      <td class="name-cell">${e.name}</td>
+      ${e.status.map(s => `<td><div class="status-cell">${dotFor(s)}</div></td>`).join('')}
+    </tr>
+  `).join('');
+
+  document.getElementById('adoptSuggestionBtn').onclick = async () => {
+    if(!confirm('اعتماد هذا الجدول يستبدل جدول الدوام الحالي للجميع. متأكدة؟')) return;
+    EMPLOYEES.length = 0;
+    EMPLOYEES.push(...proposal);
+    buildScheduleTable();
+    const note = document.getElementById('adoptSuggestionNote');
+    note.style.display = 'block';
+    if(supabaseClient){
+      const ok = await saveSetting('employees', JSON.stringify(proposal));
+      note.textContent = ok ? '✅ تم اعتماده — يظهر الآن عند جميع الموظفين.' : '⚠️ صار خطأ أثناء الحفظ.';
+    }else{
+      note.textContent = '⚠️ لسا ما تم ربط الموقع بقاعدة البيانات — الجدول تحدّث بجهازك بس.';
+    }
+  };
+}
+
 
 document.getElementById('amalPasswordSubmitBtn').addEventListener('click', () => {
   if(amalPasswordInput.value === AMAL_PASSWORD) openAmalDashboard();
@@ -1968,6 +2094,31 @@ function findCol(header, aliases){
   return header.findIndex(h => aliases.some(a => h.toLowerCase().replace(/%/g,'').trim() === a));
 }
 
+function timeToSeconds(t){
+  const parts = (t || '0:00:00').split(':').map(Number);
+  return parts.reduce((acc, v) => acc * 60 + (v || 0), 0);
+}
+function secondsToTime(s){
+  s = Math.round(s);
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+function computeTotals(agents){
+  const n = agents.length || 1;
+  const sum = key => agents.reduce((s,a) => s + (a[key] || 0), 0);
+  const avgTime = key => secondsToTime(agents.reduce((s,a) => s + timeToSeconds(a[key]), 0) / n);
+  return {
+    answered: sum('answered'),
+    outbound: sum('outbound'),
+    abandoned: sum('abandoned'),
+    aht: avgTime('aht'),
+    asa: avgTime('asa'),
+    csat: Math.round(agents.reduce((s,a) => s + a.csat, 0) / n),
+    staffTime: avgTime('staffTime'),
+    breakTime: avgTime('breakTime'),
+  };
+}
+
 document.getElementById('reportParseBtn').addEventListener('click', async () => {
   const note = document.getElementById('reportParseNote');
   const raw = document.getElementById('reportPasteBox').value;
@@ -1994,30 +2145,15 @@ document.getElementById('reportParseBtn').addEventListener('click', async () => 
 
     const warnings = [];
     const newAgents = [];
-    let newTotal = null;
 
     rows.slice(1).forEach(r => {
       if(r.every(c => !c)) return;
       const idCell = r[idIdx];
       const nameCell = r[nameIdx] || '';
       const isTotalRow = isNaN(parseInt(idCell)) || /total|إجمالي/i.test(nameCell) || /total|إجمالي/i.test(idCell);
+      if(isTotalRow) return; // we compute the real total ourselves below — never trust a pasted total row
 
       const csatVal = parseInt((r[csatIdx] || '0').replace('%',''));
-
-      if(isTotalRow){
-        newTotal = {
-          answered: parseInt(r[ansIdx]) || 0,
-          outbound: parseInt(r[outIdx]) || 0,
-          abandoned: parseInt(r[abnIdx]) || 0,
-          aht: r[ahtIdx] || '0:00:00',
-          asa: r[asaIdx] || '0:00:00',
-          csat: csatVal,
-          staffTime: r[staffIdx] || '0:00:00',
-          breakTime: r[breakIdx] || '0:00:00',
-        };
-        return;
-      }
-
       const id = parseInt(idCell);
       const known = EMPLOYEES.find(e => e.id === id);
       if(!known) warnings.push(nameCell);
@@ -2038,6 +2174,7 @@ document.getElementById('reportParseBtn').addEventListener('click', async () => 
     });
 
     if(!newAgents.length){ note.textContent = '⚠️ ما لقيت صفوف بيانات صحيحة.'; return; }
+    const newTotal = computeTotals(newAgents); // always derived from the rows themselves — never stale
 
     // shift the current report into "previous period" before overwriting, so
     // the "most improved" comparison keeps working automatically
@@ -2048,7 +2185,7 @@ document.getElementById('reportParseBtn').addEventListener('click', async () => 
 
     AGENT_REPORT.length = 0;
     AGENT_REPORT.push(...newAgents);
-    if(newTotal) Object.assign(AGENT_REPORT_TOTAL, newTotal);
+    Object.assign(AGENT_REPORT_TOTAL, newTotal);
 
     buildPublicReport();
     if(document.getElementById('amalDashboard').classList.contains('show')) buildAmalReport();
