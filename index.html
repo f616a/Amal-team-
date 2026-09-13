@@ -269,6 +269,39 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .panel-btn:hover{ background:var(--primary-tint); }
 .panel-note{ font-size:12px; color:var(--text-muted); margin-top:var(--sp-4); line-height:1.6; }
 
+.panel-row{
+  display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3);
+  padding:var(--sp-3) 0;
+}
+.panel-row b{ font-size:14px; color:var(--text-primary); display:block; }
+.panel-row small{ color:var(--text-muted); font-size:12px; }
+.switch{ position:relative; width:46px; height:26px; flex:none; }
+.switch input{ opacity:0; width:0; height:0; }
+.switch span{
+  position:absolute; inset:0; background:var(--border-strong); border-radius:var(--r-pill);
+  cursor:pointer; transition:background .2s ease;
+}
+.switch span::before{
+  content:""; position:absolute; width:20px; height:20px; border-radius:50%; background:#fff;
+  top:3px; inset-inline-start:3px; transition:transform .2s ease; box-shadow:var(--shadow-1);
+}
+.switch input:checked + span{ background:var(--primary); }
+[dir="rtl"] .switch input:checked + span::before{ transform:translateX(20px); }
+
+/* live edit mode — every [data-edit-key] on the public pages becomes
+   directly editable, and saves for real via Supabase on blur */
+body.live-edit-mode [data-edit-key]{
+  outline:1.5px dashed var(--primary-light); outline-offset:3px; border-radius:4px; cursor:text;
+}
+body.live-edit-mode [data-edit-key]:focus{
+  outline:1.5px solid var(--primary); background:var(--primary-tint);
+}
+.live-edit-banner{
+  display:none; position:sticky; top:72px; z-index:40; background:var(--primary-dark); color:#fff;
+  text-align:center; font-size:13px; font-weight:700; padding:8px;
+}
+body.live-edit-mode .live-edit-banner{ display:block; }
+
 .panel-warning{
   background:var(--sand-tint); color:#7a5d29; border-radius:var(--r-sm);
   padding:12px 14px; font-size:12.5px; line-height:1.7; font-weight:600;
@@ -809,6 +842,8 @@ tfoot.schedule-foot td{
   </div>
 </div>
 
+<div class="live-edit-banner">✏️ وضع التعديل المباشر مفعّل — اضغطي على أي نص لتعديله، يُحفظ تلقائيًا ويظهر عند الجميع</div>
+
 <nav class="category-nav" aria-label="أقسام الصفحة">
   <div class="category-nav-inner">
     <a class="category-link" href="#sec-hero">الرئيسية</a>
@@ -1120,7 +1155,18 @@ tfoot.schedule-foot td{
       <h3 class="modal-title">لوحة التحكم</h3>
 
       <div class="panel-warning">
-        💾 موظف الشهر، أبرز الأحداث، وأمنيات الشهر: تعديلاتها تُحفظ وتظهر مباشرة عند الجميع. أما تغييرات الجدول أو التقرير، اكتبي طلبك بالأسفل وأرسليه.
+        💾 موظف الشهر، أبرز الأحداث، أمنيات الشهر، والجدول/التقرير الملصوقين من إكسل: كلها تُحفظ وتظهر عند الجميع فورًا. فعّلي "وضع التعديل المباشر" تحت لتعديل أي نص ثاني بنفس الطريقة.
+      </div>
+
+      <div class="panel-row" style="border-bottom:1px solid var(--border); margin-bottom:var(--sp-2);">
+        <div>
+          <b>✏️ وضع التعديل المباشر</b>
+          <small>يخلي أي نص بالصفحة قابل للتعديل، ويُحفظ للجميع فور الخروج من الحقل</small>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="liveEditToggle">
+          <span></span>
+        </label>
       </div>
 
       <div class="panel-section" style="margin-top:var(--sp-4); padding-top:0; border-top:none;">
@@ -1246,18 +1292,57 @@ async function loadAllSettings(){
 
   if(map.spot_name) setSpotlight(map.spot_name, map.spot_gender || 'f', map.spot_month || '');
 
-  const applyText = (settingKey, editKey) => {
-    if(map[settingKey] === undefined) return;
-    const el = document.querySelector(`[data-edit-key="${editKey}"]`);
-    if(el) el.textContent = map[settingKey];
-  };
-  applyText('hl1_title','hl1-title'); applyText('hl1_body','hl1-body');
-  applyText('hl2_title','hl2-title'); applyText('hl2_body','hl2-body');
-  applyText('wishes_title','wishes-title');
-  applyText('wish1_b','wish1-b'); applyText('wish1_s','wish1-s');
-  applyText('wish2_b','wish2-b'); applyText('wish2_s','wish2-s');
-  applyText('wish3_b','wish3-b'); applyText('wish3_s','wish3-s');
+  // generic: any other saved key is applied straight to the matching
+  // [data-edit-key] element — this is what makes "live edit mode" below work
+  // for literally any text on the page, not just the few dedicated fields
+  const SPECIAL_KEYS = ['spot_name','spot_gender','spot_month','agent_report','agent_report_total','previous_report','employees'];
+  Object.entries(map).forEach(([key, value]) => {
+    if(SPECIAL_KEYS.includes(key)) return;
+    const el = document.querySelector(`[data-edit-key="${key}"]`);
+    if(el) el.textContent = value;
+  });
+
+  // full report / schedule data, if a paste was saved before
+  if(map.agent_report){
+    try{
+      const parsed = JSON.parse(map.agent_report);
+      AGENT_REPORT.length = 0; AGENT_REPORT.push(...parsed);
+    }catch(e){ console.warn('bad agent_report JSON', e); }
+  }
+  if(map.agent_report_total){
+    try{ Object.assign(AGENT_REPORT_TOTAL, JSON.parse(map.agent_report_total)); }
+    catch(e){ console.warn('bad agent_report_total JSON', e); }
+  }
+  if(map.previous_report){
+    try{ Object.assign(PREVIOUS_REPORT, JSON.parse(map.previous_report)); }
+    catch(e){ console.warn('bad previous_report JSON', e); }
+  }
+  if(map.employees){
+    try{
+      const parsed = JSON.parse(map.employees);
+      EMPLOYEES.length = 0; EMPLOYEES.push(...parsed);
+    }catch(e){ console.warn('bad employees JSON', e); }
+  }
+
+  // re-render anything that depends on data we may have just replaced
+  buildPublicReport();
+  buildScheduleTable();
 }
+
+/* live edit mode — saves any [data-edit-key] text change for real, to
+   Supabase, so it shows for every visitor */
+function setLiveEditMode(on){
+  document.body.classList.toggle('live-edit-mode', on);
+  document.querySelectorAll('[data-edit-key]').forEach(el => { el.contentEditable = on; });
+}
+document.addEventListener('focusout', async (e) => {
+  if(!document.body.classList.contains('live-edit-mode')) return;
+  const el = e.target;
+  if(!(el.dataset && el.dataset.editKey)) return;
+  if(!supabaseClient){ alert('لسا ما تم ربط الموقع بقاعدة البيانات.'); return; }
+  await saveSetting(el.dataset.editKey, el.textContent.trim());
+});
+
 
 /* ============================================================
    DATA — edit here to update the month without touching markup
@@ -1755,7 +1840,13 @@ passwordInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') documen
 
 document.getElementById('logoutBtn').addEventListener('click', () => {
   try{ localStorage.removeItem(ADMIN_KEY); }catch(e){}
+  setLiveEditMode(false);
+  document.getElementById('liveEditToggle').checked = false;
   closeModal();
+});
+
+document.getElementById('liveEditToggle').addEventListener('change', function(){
+  setLiveEditMode(this.checked);
 });
 
 /* ============================================================
@@ -1877,7 +1968,7 @@ function findCol(header, aliases){
   return header.findIndex(h => aliases.some(a => h.toLowerCase().replace(/%/g,'').trim() === a));
 }
 
-document.getElementById('reportParseBtn').addEventListener('click', () => {
+document.getElementById('reportParseBtn').addEventListener('click', async () => {
   const note = document.getElementById('reportParseNote');
   const raw = document.getElementById('reportPasteBox').value;
   if(!raw.trim()){ note.textContent = 'الصقي بيانات الجدول أولًا.'; return; }
@@ -1962,9 +2053,20 @@ document.getElementById('reportParseBtn').addEventListener('click', () => {
     buildPublicReport();
     if(document.getElementById('amalDashboard').classList.contains('show')) buildAmalReport();
 
-    note.textContent = warnings.length
-      ? `✅ تم التحديث والمعاينة. ⚠️ ما لقيت اسم عربي/جنس محفوظ لـ: ${warnings.join('، ')} — تأكدي منها بالكود قبل الإرسال.`
-      : '✅ تم التحديث والمعاينة أعلى الصفحة بقسم "تقرير الأداء".';
+    let savedForEveryone = false;
+    if(supabaseClient){
+      const results = await Promise.all([
+        saveSetting('agent_report', JSON.stringify(newAgents)),
+        newTotal ? saveSetting('agent_report_total', JSON.stringify(newTotal)) : Promise.resolve(true),
+        saveSetting('previous_report', JSON.stringify(prevCsat)),
+      ]);
+      savedForEveryone = results.every(Boolean);
+    }
+
+    const warnPart = warnings.length ? ` ⚠️ ما لقيت اسم عربي/جنس محفوظ لـ: ${warnings.join('، ')} — تأكدي منها.` : '';
+    note.textContent = savedForEveryone
+      ? `✅ تم الحفظ — التقرير الجديد يظهر الآن عند جميع الموظفين.${warnPart}`
+      : `⚠️ لسا ما تم ربط الموقع بقاعدة البيانات، فهذا التحديث يظهر بجهازك بس. انسخي الكود بالأسفل وأرسليه لإثباته بالملف.${warnPart}`;
 
     const out = document.getElementById('reportCodeOutput');
     out.value =
@@ -1973,8 +2075,10 @@ document.getElementById('reportParseBtn').addEventListener('click', () => {
       '\n];' +
       (newTotal ? `\nconst AGENT_REPORT_TOTAL = { answered:${newTotal.answered}, outbound:${newTotal.outbound}, abandoned:${newTotal.abandoned}, aht:"${newTotal.aht}", asa:"${newTotal.asa}", csat:${newTotal.csat}, staffTime:"${newTotal.staffTime}", breakTime:"${newTotal.breakTime}" };` : '') +
       `\nconst PREVIOUS_REPORT = { ${Object.entries(prevCsat).map(([k,v]) => `${k}: ${v}`).join(', ')} };`;
-    out.style.display = 'block';
-    document.getElementById('copyReportCodeBtn').style.display = 'block';
+    if(!savedForEveryone){
+      out.style.display = 'block';
+      document.getElementById('copyReportCodeBtn').style.display = 'block';
+    }
   }catch(err){
     note.textContent = '⚠️ صار خطأ بقراءة البيانات — تأكدي إنك نسخت من إكسل مباشرة (مو صورة أو نص منسّق).';
     console.error(err);
@@ -2015,7 +2119,7 @@ function matchStatus(cell){
   return null;
 }
 
-document.getElementById('scheduleParseBtn').addEventListener('click', () => {
+document.getElementById('scheduleParseBtn').addEventListener('click', async () => {
   const note = document.getElementById('scheduleParseNote');
   const raw = document.getElementById('schedulePasteBox').value;
   if(!raw.trim()){ note.textContent = 'الصقي بيانات الجدول أولًا.'; return; }
@@ -2066,17 +2170,25 @@ document.getElementById('scheduleParseBtn').addEventListener('click', () => {
     EMPLOYEES.push(...newEmployees);
     buildScheduleTable();
 
-    note.textContent = warnings.length
-      ? `✅ تم التحديث والمعاينة بجدول الدوام. ⚠️ راجعي: ${warnings.slice(0,6).join('، ')}${warnings.length>6 ? '...' : ''}`
-      : '✅ تم التحديث والمعاينة بقسم "جدول دوام الموظفين".';
+    let savedForEveryone = false;
+    if(supabaseClient){
+      savedForEveryone = await saveSetting('employees', JSON.stringify(newEmployees));
+    }
+
+    const warnPart = warnings.length ? ` ⚠️ راجعي: ${warnings.slice(0,6).join('، ')}${warnings.length>6 ? '...' : ''}` : '';
+    note.textContent = savedForEveryone
+      ? `✅ تم الحفظ — الجدول الجديد يظهر الآن عند جميع الموظفين.${warnPart}`
+      : `⚠️ لسا ما تم ربط الموقع بقاعدة البيانات، فهذا التحديث يظهر بجهازك بس. انسخي الكود بالأسفل وأرسليه لإثباته بالملف.${warnPart}`;
 
     const out = document.getElementById('scheduleCodeOutput');
     out.value =
       'const EMPLOYEES = [\n' +
       newEmployees.map(e => `  { id:${typeof e.id === 'string' ? `"${e.id}"` : e.id}, name:"${e.name}", gender:"${e.gender}", status:[${e.status.map(s=>`"${s}"`).join(',')}] },`).join('\n') +
       '\n];';
-    out.style.display = 'block';
-    document.getElementById('copyScheduleCodeBtn').style.display = 'block';
+    if(!savedForEveryone){
+      out.style.display = 'block';
+      document.getElementById('copyScheduleCodeBtn').style.display = 'block';
+    }
   }catch(err){
     note.textContent = '⚠️ صار خطأ بقراءة البيانات — تأكدي إنك نسخت من إكسل مباشرة (مو صورة أو نص منسّق).';
     console.error(err);
