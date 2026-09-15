@@ -126,6 +126,15 @@ body{
   line-height:1.7;
   -webkit-font-smoothing:antialiased;
 }
+/* #siteScope defines the color-theme variables on itself (so Amal's
+   dashboard and modals outside it stay unaffected) — so it must also
+   paint its own background/text from them, since a child element's
+   custom properties never flow back up to style its ancestor <body> */
+#siteScope{
+  background: var(--background);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
 img{ max-width:100%; display:block; }
 button, input, textarea, select{ font-family:inherit; }
 
@@ -164,7 +173,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
    ============================================================ */
 .site-header{
   position:sticky; top:0; z-index:50;
-  background:rgba(238,244,243,0.86);
+  background:color-mix(in srgb, var(--background) 86%, transparent);
   backdrop-filter:blur(10px);
   border-bottom:1px solid var(--border);
 }
@@ -207,6 +216,86 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .gender-btn.active[data-theme="light"]{ background:#E8B84B; }
 .gender-btn.active[data-theme="dark"]{ background:#2B3A4A; }
 @keyframes genderPop{ 0%{ transform:scale(1); } 45%{ transform:scale(1.07); } 100%{ transform:scale(1); } }
+
+/* ============================================================
+   COLOR THEMES (Faris.1–Faris.7) — placed after every other theme
+   rule (girls/dark-mode) so it always wins when a theme is picked;
+   only recolors tokens already used everywhere else in the file.
+   ============================================================ */
+#siteScope, #siteScope *, #siteScope *::before, #siteScope *::after{
+  transition: background-color .3s ease, color .3s ease, border-color .3s ease, fill .3s ease;
+}
+
+#siteScope[data-color-theme="faris-1"]{
+  --background: #F7EBD5; --surface: #FFFFFF; --surface-2: #F7EBD5;
+  --primary: #A85C5C; --primary-dark: #73362A; --primary-light: #E8A8AF; --primary-tint: #FBF0F1;
+  --text-primary: #73362A; --text-secondary: #6F4E47; --text-muted: #8A726D;
+  --border: rgba(115,54,42,0.14); --border-strong: rgba(115,54,42,0.26);
+  --sand: var(--primary-light); --sand-tint: var(--primary-tint);
+}
+#siteScope[data-color-theme="faris-2"]{
+  --background: #FAEAB5; --surface: #FFFFFF; --surface-2: #FAEAB5;
+  --primary: #5F7486; --primary-dark: #3D2D2E; --primary-light: #9AB3C5; --primary-tint: #EEF2F5;
+  --text-primary: #3D2D2E; --text-secondary: #524949; --text-muted: #756E6F;
+  --border: rgba(61,45,46,0.14); --border-strong: rgba(61,45,46,0.26);
+  --sand: var(--primary-light); --sand-tint: var(--primary-tint);
+}
+#siteScope[data-color-theme="faris-3"]{
+  --background: #F5EAD4; --surface: #FFFFFF; --surface-2: #F5EAD4;
+  --primary: #5C5A3C; --primary-dark: #6B4A52; --primary-light: #8D8C76; --primary-tint: #EBEBE8;
+  --text-primary: #6B4A52; --text-secondary: #6B595D; --text-muted: #877A7D;
+  --border: rgba(107,74,82,0.14); --border-strong: rgba(107,74,82,0.26);
+  --sand: var(--primary-light); --sand-tint: var(--primary-tint);
+}
+#siteScope[data-color-theme="faris-4"]{
+  --background: #F7F0E4; --surface: #FFFFFF; --surface-2: #F7F0E4;
+  --primary: #757285; --primary-dark: #4A2E3D; --primary-light: #C3D7E7; --primary-tint: #F5F8FB;
+  --text-primary: #4A2E3D; --text-secondary: #594952; --text-muted: #7A6F75;
+  --border: rgba(74,46,61,0.14); --border-strong: rgba(74,46,61,0.26);
+  --sand: var(--primary-light); --sand-tint: var(--primary-tint);
+}
+#siteScope[data-color-theme="faris-5"]{
+  --background: #F8F7F3; --surface: #FFFFFF; --surface-2: #F8F7F3;
+  --primary: #C84C3D; --primary-dark: #4B624B; --primary-light: #EE7E74; --primary-tint: #FCE9E7;
+  --text-primary: #4B624B; --text-secondary: #596659; --text-muted: #7A847A;
+  --border: rgba(75,98,75,0.14); --border-strong: rgba(75,98,75,0.26);
+  --sand: var(--primary-light); --sand-tint: var(--primary-tint);
+}
+#siteScope[data-color-theme="faris-6"]{
+  --background: #F1E6D5; --surface: #FFFFFF; --surface-2: #F1E6D5;
+  --primary: #B75833; --primary-dark: #A6432F; --primary-light: #E9AD76; --primary-tint: #FBF1E8;
+  --text-primary: #A6432F; --text-secondary: #8B554A; --text-muted: #9F776F;
+  --border: rgba(166,67,47,0.14); --border-strong: rgba(166,67,47,0.26);
+  --sand: var(--primary-light); --sand-tint: var(--primary-tint);
+}
+#siteScope[data-color-theme="faris-7"]{
+  --background: #F8F2E6; --surface: #FFFFFF; --surface-2: #F8F2E6;
+  --primary: #D0202B; --primary-dark: #6B4A3A; --primary-light: #DE636B; --primary-tint: #F9E4E6;
+  --text-primary: #6B4A3A; --text-secondary: #6B5950; --text-muted: #877A74;
+  --border: rgba(107,74,58,0.14); --border-strong: rgba(107,74,58,0.26);
+  --sand: var(--primary-light); --sand-tint: var(--primary-tint);
+}
+
+/* color theme picker: trigger button + a real modal (not an absolutely
+   positioned dropdown, which could escape its container inside the
+   toggle row's flex/sticky layout) */
+.theme-picker-btn{
+  display:flex; align-items:center; gap:6px; border:1px solid var(--border); background:var(--surface);
+  color:var(--text-primary); font-weight:700; font-size:13px; padding:10px 18px; border-radius:var(--r-pill);
+  cursor:pointer; box-shadow:var(--shadow-1);
+}
+.theme-picker-swatches{ display:inline-flex; gap:3px; }
+.theme-picker-swatches i{ width:10px; height:10px; border-radius:50%; display:inline-block; border:1px solid rgba(0,0,0,0.08); }
+.theme-option{
+  display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:var(--r-sm);
+  cursor:pointer; font-size:14px; font-weight:600; color:var(--text-primary); background:none; border:none; width:100%; text-align:start;
+  margin-bottom:4px;
+}
+.theme-option:hover{ background:var(--primary-tint); }
+.theme-option.active{ background:var(--primary-tint); font-weight:800; }
+.theme-option .swatch-row{ display:inline-flex; gap:4px; flex:none; }
+.theme-option .swatch-row i{ width:16px; height:16px; border-radius:50%; display:inline-block; border:1px solid rgba(0,0,0,0.08); }
+
 
 .settings-gear{
   width:44px; height:44px; border-radius:50%; border:1px solid var(--border);
@@ -538,11 +627,10 @@ table.amal-report tfoot td{ background:var(--primary-tint); font-weight:800; col
    ============================================================ */
 .category-nav{
   position:sticky; top:72px; z-index:45;
-  background:rgba(238,243,248,0.92); backdrop-filter:blur(8px);
+  background:color-mix(in srgb, var(--background) 92%, transparent); backdrop-filter:blur(8px);
   border-bottom:1px solid var(--border);
   overflow-x:auto; white-space:nowrap; scrollbar-width:none;
 }
-#siteScope.dark-mode .category-nav{ background:rgba(15,25,34,0.92); }
 .category-nav::-webkit-scrollbar{ display:none; }
 .category-nav-inner{ display:inline-flex; gap:8px; padding:10px var(--sp-5); }
 .category-link{
@@ -644,7 +732,7 @@ section[id]{ scroll-margin-top: 132px; } /* clears the sticky header + category 
   display:flex; align-items:center; justify-content:center;
   background:var(--primary-tint); color:var(--primary);
 }
-.highlight-card.gold .highlight-ico{ background:var(--sand-tint); color:#8a6a2f; }
+.highlight-card.gold .highlight-ico{ background:var(--sand-tint); color:var(--primary-dark); }
 .highlight-card h3{ margin:0 0 6px; font-size:17px; color:var(--primary-dark); font-weight:700; }
 .highlight-card p{ margin:0; color:var(--text-secondary); font-size:14.5px; }
 
@@ -677,7 +765,7 @@ section[id]{ scroll-margin-top: 132px; } /* clears the sticky header + category 
 .spotlight-quote{ color:var(--text-secondary); font-size:15px; margin:0; }
 .spotlight-badge{
   display:inline-flex; align-items:center; gap:6px; margin-top:var(--sp-3);
-  background:var(--sand-tint); color:#8a6a2f; font-size:12.5px; font-weight:700;
+  background:var(--sand-tint); color:var(--primary-dark); font-size:12.5px; font-weight:700;
   padding:6px 12px; border-radius:var(--r-pill);
 }
 
@@ -747,7 +835,7 @@ section[id]{ scroll-margin-top: 132px; } /* clears the sticky header + category 
   box-shadow:0 0 0 4px var(--primary-tint);
 }
 .form-note{
-  display:flex; gap:10px; align-items:flex-start; background:var(--sand-tint); color:#7a5d29;
+  display:flex; gap:10px; align-items:flex-start; background:var(--sand-tint); color:var(--primary-dark);
   padding:12px 14px; border-radius:var(--r-sm); font-size:13.5px; margin-top:var(--sp-4);
 }
 .btn-submit{
@@ -850,6 +938,10 @@ tfoot.schedule-foot td{
     <button class="gender-btn theme-btn" type="button" data-theme="light">☀️ Light</button>
     <button class="gender-btn theme-btn" type="button" data-theme="dark">🌙 Dark</button>
   </div>
+  <button class="theme-picker-btn" id="themePickerBtn" type="button" aria-haspopup="true">
+    <span class="theme-picker-swatches" id="themePickerCurrentSwatches"></span>
+    <span id="themePickerCurrentLabel">Faris.1</span> 🎨
+  </button>
 </div>
 
 <div class="container">
@@ -1102,6 +1194,15 @@ tfoot.schedule-foot td{
 
 </div><!-- /#siteScope — dark mode is scoped to everything above; the modals and Amal's dashboard below stay outside it so they're always light -->
 
+<!-- COLOR THEME PICKER MODAL -->
+<div class="modal-backdrop" id="themePickerModal">
+  <div class="modal-card">
+    <button class="modal-close" id="themePickerCloseBtn" aria-label="إغلاق">✕</button>
+    <h3 class="modal-title">🎨 اختاري تشكيلة الألوان</h3>
+    <div id="themePickerList"></div>
+  </div>
+</div>
+
 <!-- AMAL MODE PASSWORD GATE -->
 <div class="modal-backdrop" id="amalPasswordModal">
   <div class="modal-card">
@@ -1278,6 +1379,7 @@ tfoot.schedule-foot td{
         <input type="file" id="heroImageInput" accept="image/*" style="width:100%; margin-bottom:8px;">
         <img id="heroImagePreview" style="display:none; width:100%; border-radius:var(--r-md); margin-bottom:8px;">
         <button class="panel-btn" id="heroImageSaveBtn" style="background:var(--primary); color:#fff; border-color:transparent;">💾 حفظ للجميع</button>
+        <button class="panel-btn danger" id="heroImageRemoveBtn" style="margin-top:8px;">🗑️ حذف الصورة نهائيًا</button>
         <div class="panel-note" id="heroImageNote" style="display:none;"></div>
       </div>
 
@@ -1368,7 +1470,10 @@ async function loadAllSettings(){
   data.forEach(r => { map[r.key] = r.value; });
 
   if(map.spot_name) setSpotlight(map.spot_name, map.spot_gender || 'f', map.spot_month || '');
-  if(map.hero_banner_image){
+  if(map.hero_banner_image === 'REMOVED'){
+    const banner = document.querySelector('.hero-banner');
+    if(banner) banner.style.display = 'none';
+  }else if(map.hero_banner_image){
     const heroImg = document.querySelector('.hero-banner img');
     if(heroImg) heroImg.src = map.hero_banner_image;
   }
@@ -1595,6 +1700,67 @@ document.querySelectorAll('.theme-btn').forEach(btn => {
 let initialThemeMode = 'light';
 try{ initialThemeMode = localStorage.getItem(THEME_MODE_KEY) || 'light'; }catch(e){}
 applyThemeMode(initialThemeMode);
+
+/* ============================================================
+   COLOR THEMES (Faris.1–Faris.7)
+   ============================================================ */
+const COLOR_THEME_KEY = 'amal-portal-color-theme';
+const FARIS_THEMES = [
+  { key:"faris-1", label:"Faris.1", swatches:["#F3E0BE","#DE838D","#73362A"] },
+  { key:"faris-2", label:"Faris.2", swatches:["#F8DE8D","#6E93AC","#3D2D2E"] },
+  { key:"faris-3", label:"Faris.3", swatches:["#F0DEBD","#5C5A3C","#6B4A52"] },
+  { key:"faris-4", label:"Faris.4", swatches:["#F2E8D5","#A9C6DD","#4A2E3D"] },
+  { key:"faris-5", label:"Faris.5", swatches:["#F5F2EC","#E74639","#4B624B"] },
+  { key:"faris-6", label:"Faris.6", swatches:["#EAD9BE","#E08A3C","#A6432F"] },
+  { key:"faris-7", label:"Faris.7", swatches:["#F5EBD8","#D0202B","#6B4A3A"] },
+];
+
+function swatchesHtml(colors, size){
+  return colors.map(c => `<i style="width:${size}px;height:${size}px;background:${c};"></i>`).join('');
+}
+
+function renderThemePicker(){
+  const list = document.getElementById('themePickerList');
+  list.innerHTML = FARIS_THEMES.map(t => `
+    <button class="theme-option" data-theme-key="${t.key}" type="button">
+      <span class="swatch-row">${swatchesHtml(t.swatches, 16)}</span>
+      ${t.label}
+    </button>
+  `).join('');
+  list.querySelectorAll('.theme-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      applyColorTheme(btn.dataset.themeKey);
+      document.getElementById('themePickerModal').classList.remove('show');
+    });
+  });
+}
+
+function applyColorTheme(key){
+  const theme = FARIS_THEMES.find(t => t.key === key) || FARIS_THEMES[0];
+  siteScope.dataset.colorTheme = theme.key;
+  document.getElementById('themePickerCurrentLabel').textContent = theme.label;
+  document.getElementById('themePickerCurrentSwatches').innerHTML = swatchesHtml(theme.swatches, 9);
+  document.querySelectorAll('.theme-option').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.themeKey === theme.key);
+  });
+  try{ localStorage.setItem(COLOR_THEME_KEY, theme.key); }catch(e){}
+}
+
+renderThemePicker();
+let initialColorTheme = 'faris-1';
+try{ initialColorTheme = localStorage.getItem(COLOR_THEME_KEY) || 'faris-1'; }catch(e){}
+applyColorTheme(initialColorTheme);
+
+const themePickerModal = document.getElementById('themePickerModal');
+document.getElementById('themePickerBtn').addEventListener('click', () => {
+  themePickerModal.classList.add('show');
+});
+document.getElementById('themePickerCloseBtn').addEventListener('click', () => {
+  themePickerModal.classList.remove('show');
+});
+themePickerModal.addEventListener('click', (e) => {
+  if(e.target === themePickerModal) themePickerModal.classList.remove('show');
+});
 
 /* ============================================================
    AMAL MODE — password-gated personal dashboard
@@ -2250,7 +2416,9 @@ document.getElementById('heroImageSaveBtn').addEventListener('click', async () =
   const note = document.getElementById('heroImageNote');
   if(!pendingHeroImage){ note.style.display = 'block'; note.textContent = 'اختاري صورة أولًا.'; return; }
 
-  document.querySelector('.hero-banner img').src = pendingHeroImage; // instant local preview
+  const banner = document.querySelector('.hero-banner');
+  banner.style.display = ''; // in case it was previously removed
+  banner.querySelector('img').src = pendingHeroImage; // instant local preview
 
   note.style.display = 'block';
   if(!supabaseClient){
@@ -2260,6 +2428,25 @@ document.getElementById('heroImageSaveBtn').addEventListener('click', async () =
   note.textContent = 'جاري الحفظ...';
   const ok = await saveSetting('hero_banner_image', pendingHeroImage);
   note.textContent = ok ? '✅ تم الحفظ — الصورة الجديدة تظهر الآن عند جميع الموظفين.' : '⚠️ صار خطأ أثناء الحفظ.';
+});
+
+document.getElementById('heroImageRemoveBtn').addEventListener('click', async () => {
+  if(!confirm('حذف صورة الواجهة نهائيًا عند جميع الموظفين؟')) return;
+  const note = document.getElementById('heroImageNote');
+  note.style.display = 'block';
+
+  document.querySelector('.hero-banner').style.display = 'none'; // instant local preview
+  pendingHeroImage = null;
+  document.getElementById('heroImagePreview').style.display = 'none';
+  document.getElementById('heroImageInput').value = '';
+
+  if(!supabaseClient){
+    note.textContent = '⚠️ لسا ما تم ربط الموقع بقاعدة البيانات — الحذف صار بجهازك بس.';
+    return;
+  }
+  note.textContent = 'جاري الحذف...';
+  const ok = await saveSetting('hero_banner_image', 'REMOVED');
+  note.textContent = ok ? '✅ تم الحذف — تختفي الصورة الآن عند جميع الموظفين.' : '⚠️ صار خطأ أثناء الحذف.';
 });
 
 document.getElementById('spotPreviewBtn').addEventListener('click', async () => {
